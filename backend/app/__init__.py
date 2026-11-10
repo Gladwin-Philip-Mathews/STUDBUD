@@ -8,7 +8,7 @@ def create_app(config=None):
     if config:
         app.config.update(config)
 
-    @app.get("/health")
+    @app.get("/api/health")
     def health():
         return {"status": "ok"}
 
