@@ -7,3 +7,4 @@ input { padding: .5rem; }
 button { padding: .5rem 1rem; cursor: pointer; }
 .error { color: #b00020; margin: 0; }
 .notice { color: #1b5e20; }
+nav { display: flex; gap: 1rem; flex-wrap: wrap; margin: .5rem 0 1rem; }

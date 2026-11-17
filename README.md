@@ -31,7 +31,8 @@ npm test
 ## Project layout
 ```
 backend/
-  app/controllers/     JSON API endpoints, one per feature group
+  app/controllers/     JSON API endpoints, one file per feature (blueprints register automatically)
+  app/schema/          one .sql file per feature
   app/services/        business rules (AuthService, ConnectionService, ...)
   app/repositories/    persistence behind interfaces
   app/models/          Account, Profile, Connection, ...
@@ -40,6 +41,9 @@ backend/
 frontend/              Angular app (screens call the /api endpoints)
 docs/                  SRS, M3 design, diagrams
 ```
+
+## Adding your feature
+See [docs/feature-guide.md](docs/feature-guide.md) for who owns what and a step-by-step recipe.
 
 ## Working rules
 See [CONTRIBUTING.md](CONTRIBUTING.md). Short version: never push to `main`; use a branch and a pull request with one review.

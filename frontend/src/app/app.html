@@ -5,6 +5,16 @@
     <button type="button" id="sign-out" (click)="signOut()">Sign out</button>
   }
 </header>
+@if (auth.account(); as a) {
+  <nav>
+    <a routerLink="/profiles">Profile</a>
+    <a routerLink="/communities">Communities</a>
+    <a routerLink="/connections">Connections</a>
+    <a routerLink="/messaging">Messages</a>
+    @if (a.role === 'moderator' || a.role === 'administrator') { <a routerLink="/moderation">Moderation</a> }
+    @if (a.role === 'administrator') { <a routerLink="/admin">Admin</a> }
+  </nav>
+}
 <main>
   <router-outlet />
 </main>

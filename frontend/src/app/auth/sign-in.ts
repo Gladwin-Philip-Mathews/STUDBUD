@@ -39,7 +39,7 @@ export class SignIn {
     this.auth.signIn(this.email, this.password).subscribe((r) => {
       this.busy.set(false);
       if (r.ok) {
-        this.router.navigateByUrl('/profile');
+        this.router.navigateByUrl('/profiles');
       } else {
         this.error.set(r.message ?? 'Sign in failed.');
         this.canResend.set(!!r.canResend);
