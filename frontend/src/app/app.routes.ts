@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 import { authGuard } from './auth/auth.guard';
 import { Register } from './auth/register';
 import { SignIn } from './auth/sign-in';
+import { NotificationsPage } from './notifications/notifications-page';
 import { Verify } from './auth/verify';
 
 // Each feature lives in its own folder and loads on demand. Teammates edit only their own
@@ -21,6 +22,7 @@ export const routes: Routes = [
   feature('profiles', () => import('./profiles/profiles.routes')),
   feature('communities', () => import('./communities/communities.routes')),
   feature('connections', () => import('./connections/connections.routes')),
+  { path: 'notifications', component: NotificationsPage, canActivate: [authGuard] },
   feature('messaging', () => import('./messaging/messaging.routes')),
   feature('moderation', () => import('./moderation/moderation.routes')),
   feature('admin', () => import('./admin/admin.routes')),

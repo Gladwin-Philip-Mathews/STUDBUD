@@ -2,7 +2,7 @@ import importlib
 import os
 import pkgutil
 
-from flask import Flask
+from flask import Flask, g
 
 from .container import close_db, init_database
 from .email_gateway import StubEmailGateway
@@ -18,6 +18,7 @@ def create_app(config=None):
         BASE_URL=os.getenv("BASE_URL", "http://localhost:4200"),
         SESSION_COOKIE_SAMESITE="Lax",
         PASSWORD_HASH_METHOD="pbkdf2:sha256",
+        EMAIL_DISPATCH="after_response",  # "manual" lets tests control when emails go out
     )
     if config:
         app.config.update(config)
@@ -26,6 +27,13 @@ def create_app(config=None):
     app.extensions["email_gateway"] = StubEmailGateway()
     init_database(app)
     app.teardown_appcontext(close_db)
+
+    @app.after_request
+    def hand_over_emails_after_response(response):
+        if g.pop("email_pending", False) and app.config["EMAIL_DISPATCH"] == "after_response":
+            from .email_dispatch import dispatch_pending_emails
+            response.call_on_close(lambda: dispatch_pending_emails(app))
+        return response
 
     # Every module in controllers/ that defines `bp` (a Blueprint) is registered automatically.
     from . import controllers

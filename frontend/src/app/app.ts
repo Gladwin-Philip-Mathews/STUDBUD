@@ -1,7 +1,9 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Router, RouterLink, RouterOutlet } from '@angular/router';
+import { NavigationEnd, Router, RouterLink, RouterOutlet } from '@angular/router';
+import { filter } from 'rxjs';
 import { AuthService } from './auth/auth.service';
+import { NotificationsService } from './notifications/notifications.service';
 
 @Component({
   selector: 'app-root',
@@ -13,6 +15,7 @@ export class App implements OnInit {
   private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
   protected readonly auth = inject(AuthService);
+  protected readonly notifications = inject(NotificationsService);
   protected readonly apiStatus = signal('checking...');
 
   ngOnInit(): void {
@@ -21,6 +24,10 @@ export class App implements OnInit {
       error: () => this.apiStatus.set('unreachable')
     });
     this.auth.loadMe().subscribe();
+    // Unread count on every page (FR-080)
+    this.router.events.pipe(filter((e) => e instanceof NavigationEnd)).subscribe(() => {
+      if (this.auth.account()) this.notifications.refresh();
+    });
   }
 
   protected signOut(): void {

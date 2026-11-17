@@ -21,9 +21,11 @@ class StubEmailGateway(EmailGateway):
 
     def __init__(self):
         self.sent: list = []
+        self.attempts = 0
         self.available = True
 
     def send(self, message: EmailMessage) -> bool:
+        self.attempts += 1
         if not self.available:
             return False
         self.sent.append(message)
