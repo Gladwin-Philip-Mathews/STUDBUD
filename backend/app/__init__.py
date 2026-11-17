@@ -24,7 +24,8 @@ def create_app(config=None):
         app.config.update(config)
 
     # DD-03: one email route. Live gateway is added last (CON-009); the stub is used until then.
-    app.extensions["email_gateway"] = StubEmailGateway()
+    # In development the stub prints each email (including verification links) in the backend window.
+    app.extensions["email_gateway"] = StubEmailGateway(echo=not app.config.get("TESTING"))
     init_database(app)
     app.teardown_appcontext(close_db)
 

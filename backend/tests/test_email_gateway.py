@@ -13,3 +13,9 @@ def test_stub_can_simulate_unavailable_route():  # SD-1 alternative flow
     g.available = False
     assert g.send(EmailMessage("a@g.rit.edu", "s", "b")) is False
     assert g.sent == []
+
+
+def test_stub_can_print_messages_for_development(capsys):
+    g = StubEmailGateway(echo=True)
+    g.send(EmailMessage("a@g.rit.edu", "Verify", "link: http://x/verify?token=abc"))
+    assert "token=abc" in capsys.readouterr().out
