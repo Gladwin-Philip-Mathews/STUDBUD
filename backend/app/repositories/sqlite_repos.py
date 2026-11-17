@@ -80,13 +80,13 @@ class SqliteVerificationTokenRepository(VerificationTokenRepository):
     def _row(r):
         return VerificationToken(id=r["id"], account_id=r["account_id"], token_hash=r["token_hash"],
                                  expires_at=_dt(r["expires_at"]), created_at=_dt(r["created_at"]),
-                                 used_at=_dt(r["used_at"]))
+                                 used_at=_dt(r["used_at"]), is_resend=bool(r["is_resend"]))
 
     def add(self, t):
         t.created_at = t.created_at or _now()
         cur = self.conn.execute(
-            "INSERT INTO verification_tokens(account_id, token_hash, created_at, expires_at) VALUES (?,?,?,?)",
-            (t.account_id, t.token_hash, _s(t.created_at), _s(t.expires_at)))
+            "INSERT INTO verification_tokens(account_id, token_hash, created_at, expires_at, is_resend) VALUES (?,?,?,?,?)",
+            (t.account_id, t.token_hash, _s(t.created_at), _s(t.expires_at), int(t.is_resend)))
         t.id = cur.lastrowid
         self.conn.commit()
         return t
@@ -100,11 +100,16 @@ class SqliteVerificationTokenRepository(VerificationTokenRepository):
                           (_s(t.used_at), _s(t.expires_at), t.id))
         self.conn.commit()
 
-    def count_since(self, account_id, since):
+    def count_resends_since(self, account_id, since):
         r = self.conn.execute(
-            "SELECT COUNT(*) AS n FROM verification_tokens WHERE account_id = ? AND created_at >= ?",
+            "SELECT COUNT(*) AS n FROM verification_tokens WHERE account_id = ? AND is_resend = 1 AND created_at >= ?",
             (account_id, _s(since))).fetchone()
         return r["n"]
+
+    def invalidate_all(self, account_id, now):
+        self.conn.execute("UPDATE verification_tokens SET used_at = ? WHERE account_id = ? AND used_at IS NULL",
+                          (_s(now), account_id))
+        self.conn.commit()
 
 
 class SqliteProfileRepository(ProfileRepository):

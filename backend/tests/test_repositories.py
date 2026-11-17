@@ -52,9 +52,10 @@ def test_token_store_and_resend_window(conn):  # NFR-012 resend limit
     a = make(conn)
     repo = SqliteVerificationTokenRepository(conn)
     for i in range(3):
-        repo.add(VerificationToken(a.id, f"h{i}", NOW + timedelta(hours=24), created_at=NOW + timedelta(minutes=i)))
-    assert repo.count_since(a.id, NOW - timedelta(hours=1)) == 3
-    assert repo.count_since(a.id, NOW + timedelta(minutes=2)) == 1
+        repo.add(VerificationToken(a.id, f"h{i}", NOW + timedelta(hours=24), created_at=NOW + timedelta(minutes=i),
+                                   is_resend=i > 0))
+    assert repo.count_resends_since(a.id, NOW - timedelta(hours=1)) == 2
+    assert repo.count_resends_since(a.id, NOW + timedelta(minutes=2)) == 1
     t = repo.find_by_hash("h1")
     t.used_at = NOW
     repo.save(t)

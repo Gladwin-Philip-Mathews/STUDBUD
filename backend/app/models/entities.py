@@ -59,6 +59,7 @@ class VerificationToken:
     expires_at: datetime
     created_at: Optional[datetime] = None
     used_at: Optional[datetime] = None
+    is_resend: bool = False
     id: Optional[int] = None
 
     def is_valid(self, now: datetime) -> bool:

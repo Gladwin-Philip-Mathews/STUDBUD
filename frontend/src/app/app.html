@@ -1,5 +1,11 @@
 <header>
   <h1>StudBud</h1>
-  <p>Backend status: <strong>{{ apiStatus() }}</strong></p>
+  @if (auth.account(); as a) {
+    <span>{{ a.displayName }}</span>
+    <button type="button" id="sign-out" (click)="signOut()">Sign out</button>
+  }
 </header>
-<router-outlet />
+<main>
+  <router-outlet />
+</main>
+<footer><small>Backend status: <strong>{{ apiStatus() }}</strong></small></footer>
