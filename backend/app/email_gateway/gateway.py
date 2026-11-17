@@ -19,7 +19,8 @@ class EmailGateway(ABC):
 class StubEmailGateway(EmailGateway):
     """Keeps sent messages for tests. Set `available = False` to simulate an outage."""
 
-    def __init__(self):
+    def __init__(self, echo: bool = False):
+        self.echo = echo  # print each message to the backend console (development only)
         self.sent: list = []
         self.attempts = 0
         self.available = True
@@ -29,4 +30,6 @@ class StubEmailGateway(EmailGateway):
         if not self.available:
             return False
         self.sent.append(message)
+        if self.echo:
+            print(f"\n[email stub] to={message.to} | {message.subject}\n    {message.body}\n", flush=True)
         return True
