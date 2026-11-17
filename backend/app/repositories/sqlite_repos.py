@@ -145,6 +145,14 @@ class SqliteProfileRepository(ProfileRepository):
         c.commit()
 
 
+    def candidates(self, exclude_id):
+        accounts = SqliteAccountRepository(self.conn)
+        rows = self.conn.execute(
+            "SELECT p.account_id FROM profiles p JOIN accounts a ON a.id = p.account_id "
+            "WHERE a.status = 'verified' AND a.id != ? ORDER BY a.id", (exclude_id,)).fetchall()
+        return [(accounts.get(r["account_id"]), self.get(r["account_id"])) for r in rows]
+
+
 class SqliteConnectionRepository(ConnectionRepository):
     def __init__(self, conn):
         self.conn = conn
@@ -187,6 +195,16 @@ class SqliteConnectionRepository(ConnectionRepository):
         self.conn.commit()
 
 
+    def dismiss(self, account_id, dismissed_id):
+        self.conn.execute("INSERT OR IGNORE INTO dismissed_suggestions(account_id, dismissed_id) VALUES (?,?)",
+                          (account_id, dismissed_id))
+        self.conn.commit()
+
+    def dismissed_ids(self, account_id):
+        return {r["dismissed_id"] for r in self.conn.execute(
+            "SELECT dismissed_id FROM dismissed_suggestions WHERE account_id = ?", (account_id,))}
+
+
 class SqliteNotificationRepository(NotificationRepository):
     def __init__(self, conn):
         self.conn = conn
@@ -218,4 +236,15 @@ class SqliteNotificationRepository(NotificationRepository):
     def save(self, n: Notification):
         self.conn.execute("UPDATE notifications SET read_at=?, email_status=?, email_resends=? WHERE id=?",
                           (_s(n.read_at), n.email_status.value, n.email_resends, n.id))
+        self.conn.commit()
+
+    def pending_email(self):
+        rows = self.conn.execute(
+            "SELECT * FROM notifications WHERE email_status IN ('not sent', 'returned') AND email_resends <= 3 ORDER BY id"
+        ).fetchall()
+        return [self._row(r) for r in rows]
+
+    def mark_all_read(self, account_id, now):
+        self.conn.execute("UPDATE notifications SET read_at = ? WHERE recipient_id = ? AND read_at IS NULL",
+                          (_s(now), account_id))
         self.conn.commit()

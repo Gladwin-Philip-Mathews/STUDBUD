@@ -59,6 +59,11 @@ def _import_all(package_name):
         importlib.import_module(f"{package_name}.{mod.name}")
 
 
+def _flag_email_pending():
+    """Ask for the email to be handed over after the response is sent (DD-04)."""
+    g.email_pending = True
+
+
 def get_deps():
     if "deps" not in g:
         db = get_db()
@@ -71,6 +76,7 @@ def get_deps():
             connections=SqliteConnectionRepository(db),
             notifications=SqliteNotificationRepository(db),
             gateway=current_app.extensions["email_gateway"],
+            on_email_pending=_flag_email_pending,
             clock=current_app.config.get("CLOCK"),
             config=current_app.config,
             services={},

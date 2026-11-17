@@ -36,7 +36,7 @@ def clock():
 def app(tmp_path, clock):
     app = create_app({"TESTING": True, "DATABASE_PATH": str(tmp_path / "t.db"), "CLOCK": clock,
                       "SECRET_KEY": "test", "BASE_URL": "http://app",
-                      "PASSWORD_HASH_METHOD": "pbkdf2:sha256:1000"})
+                      "PASSWORD_HASH_METHOD": "pbkdf2:sha256:1000", "EMAIL_DISPATCH": "manual"})
     return app
 
 
