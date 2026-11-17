@@ -18,10 +18,11 @@
 5. Do not review your own pull request.
 
 ## Code
-- Layers follow the M3 design: controllers -> services -> repositories. Rules live in services; persistence only in repositories (DD-10).
+- Layers follow the M3 design: controllers -> services -> repositories (backend). Controllers return JSON under `/api`; Angular only talks to the API. Rules live in services; persistence only in repositories (DD-10).
 - Limits (resend count, lock-out, session time...) are settings, not constants in code (DD-08).
 - Email only goes through `EmailGateway` (DD-03).
-- Every service has unit tests written from the acceptance criteria.
+- Every service has unit tests written from the acceptance criteria. Every Angular component or service with logic has a spec.
+- Do not put business rules in Angular. The backend enforces them (the frontend may mirror checks for usability only).
 
 ## Secrets
 Never commit `.env`, passwords, keys, or database files.

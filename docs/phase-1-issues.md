@@ -6,3 +6,4 @@
 4. Repository interfaces and SQLite implementations (DD-10)
 5. `EmailGateway` interface and stub implementation (DD-03, CON-009)
 6. Test fixtures: temporary database per test
+7. Angular: app shell, routing, API service (HttpClient) and an auth guard placeholder
