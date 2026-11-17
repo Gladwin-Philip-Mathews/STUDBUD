@@ -1,0 +1,30 @@
+"""EmailGateway (DD-03): the only route to email. Live and stub are swapped by setting (CON-009)."""
+from abc import ABC, abstractmethod
+from dataclasses import dataclass, field
+
+
+@dataclass(frozen=True)
+class EmailMessage:
+    to: str
+    subject: str
+    body: str  # names the event and a display name only (FR-081)
+
+
+class EmailGateway(ABC):
+    @abstractmethod
+    def send(self, message: EmailMessage) -> bool:
+        """Hand the message to the mail route. True = handed over, False = returned/unavailable."""
+
+
+class StubEmailGateway(EmailGateway):
+    """Keeps sent messages for tests. Set `available = False` to simulate an outage."""
+
+    def __init__(self):
+        self.sent: list = []
+        self.available = True
+
+    def send(self, message: EmailMessage) -> bool:
+        if not self.available:
+            return False
+        self.sent.append(message)
+        return True
