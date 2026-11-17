@@ -12,6 +12,7 @@ from typing import Callable, Optional
 
 from werkzeug.security import check_password_hash, generate_password_hash
 
+from ..container import service
 from ..email_gateway import EmailGateway, EmailMessage
 from ..models import Account, AccountStatus, VerificationToken
 from ..models.enums import SettingName
@@ -173,3 +174,10 @@ class AuthService:
 
     def sign_out(self, session: dict) -> None:
         session.clear()
+
+
+@service("auth")
+def build_auth_service(d):
+    kwargs = {"clock": d.clock} if d.clock else {}
+    return AuthService(d.accounts, d.tokens, d.settings, d.gateway, d.config["BASE_URL"],
+                       hash_method=d.config["PASSWORD_HASH_METHOD"], **kwargs)

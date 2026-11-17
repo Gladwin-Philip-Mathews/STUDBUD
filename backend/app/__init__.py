@@ -1,4 +1,6 @@
+import importlib
 import os
+import pkgutil
 
 from flask import Flask
 
@@ -25,11 +27,11 @@ def create_app(config=None):
     init_database(app)
     app.teardown_appcontext(close_db)
 
-    from .controllers import auth
-    app.register_blueprint(auth.bp)
-
-    @app.get("/api/health")
-    def health():
-        return {"status": "ok"}
+    # Every module in controllers/ that defines `bp` (a Blueprint) is registered automatically.
+    from . import controllers
+    for module in pkgutil.iter_modules(controllers.__path__):
+        blueprint = getattr(importlib.import_module(f"{controllers.__name__}.{module.name}"), "bp", None)
+        if blueprint is not None:
+            app.register_blueprint(blueprint)
 
     return app

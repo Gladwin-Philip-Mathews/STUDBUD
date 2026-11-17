@@ -1,0 +1,2 @@
+-- communities, posts, replies. Owner: Jason.
+-- Add your CREATE TABLE IF NOT EXISTS statements here. Do not edit other files in this folder.
