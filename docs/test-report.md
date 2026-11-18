@@ -1,10 +1,10 @@
 # Test report
 
-Results of the final run on `main` before submission (18 November 2026, after the registration notice change).
+Results of the final run on `main` before submission (18 November 2026, after the final changes).
 
 | Suite | Tool | Tests | Result |
 |---|---|---|---|
-| Backend (Flask API, services, repositories) | pytest | 145 | all passed (about 96 s) |
+| Backend (Flask API, services, repositories) | pytest | 146 | all passed (about 90 s) |
 | Frontend (Angular services, routes, app shell) | Karma and Jasmine, headless Chrome | 25 | all passed |
 | Production build | `ng build` | n/a | succeeds |
 
@@ -14,7 +14,7 @@ Run them with `pytest` in `backend` and `npm test` in `frontend`.
 
 | File | Tests | What it covers |
 |---|---|---|
-| `test_auth_api.py` | 18 | registration with the conduct notice, verification link, resend limit, sign-in, lockout, session idle expiry |
+| `test_auth_api.py` | 19 | registration with the conduct notice, verification link, resend limit, sign-in, lockout, session idle expiry |
 | `test_connections_api.py` | 22 | requests, accept and decline, wait after decline, suggestions, withdraw and remove, notifications |
 | `test_communities.py` | 15 | course and interest communities, posts, replies, edit window, hiding, search |
 | `test_moderation.py` | 19 | reports, queue, acknowledgement, decisions, actions, append-only log, role checks |
