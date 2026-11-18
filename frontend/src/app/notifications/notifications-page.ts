@@ -16,7 +16,7 @@ import { AppNotification, NotificationsService } from './notifications.service';
       </div>
     } @empty { <p>Nothing yet.</p> }
   `,
-  styles: `.item { padding: .4rem 0; border-bottom: 1px solid #ddd; } .unread { font-weight: 600; } .link { background: none; border: 0; text-align: left; padding: 0; font: inherit; cursor: pointer; } small { display: block; color: #666; }`,
+  styles: `.item { background: var(--white); border: 1px solid var(--line); border-radius: 10px; padding: .6rem .9rem; margin: .45rem 0; } .item.unread { border-left: 4px solid var(--orange); } .unread { font-weight: 600; } .link { background: none; border: 0; text-align: left; padding: 0; font: inherit; cursor: pointer; } small { display: block; }`,
 })
 export class NotificationsPage implements OnInit {
   private readonly api = inject(NotificationsService);

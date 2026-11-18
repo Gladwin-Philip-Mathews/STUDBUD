@@ -66,7 +66,7 @@ import { COHORTS, CourseOption, INTENTS, Profile, ProfilesService } from './prof
     <button type="button" class="danger" (click)="deleteAccount()">Delete my account</button>
     @if (deleteMessage()) { <p class="error">{{ deleteMessage() }}</p> }
   `,
-  styles: `.chips { display: flex; gap: .4rem; flex-wrap: wrap; margin: .4rem 0; } .chip { background: #eef; padding: .15rem .5rem; border-radius: 1rem; } .chip button { border: 0; background: none; cursor: pointer; } label { display: block; margin: .6rem 0; } .error { color: #b00020; } .option { display: block; margin: .2rem 0; }`,
+  styles: `.chips { display: flex; gap: .4rem; flex-wrap: wrap; margin: .4rem 0; } .chip button { border: 0; background: none; padding: 0 .2rem; } .chip button:hover { background: none; color: var(--danger); } .error { color: #b00020; } .option { display: block; margin: .2rem 0; }`,
 })
 export class ProfilesHome implements OnInit {
   private readonly api = inject(ProfilesService);

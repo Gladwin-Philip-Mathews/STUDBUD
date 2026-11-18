@@ -1,6 +1,6 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { NavigationEnd, Router, RouterLink, RouterOutlet } from '@angular/router';
+import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { filter } from 'rxjs';
 import { AuthService } from './auth/auth.service';
 import { NotificationsService } from './notifications/notifications.service';
@@ -8,7 +8,7 @@ import { OnboardingQuestionCard } from './profiles/onboarding-question';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, RouterLink, OnboardingQuestionCard],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, OnboardingQuestionCard],
   templateUrl: './app.html',
   styleUrl: './app.scss'
 })

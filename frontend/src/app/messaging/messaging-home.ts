@@ -36,7 +36,7 @@ import { ChatMessage, ConversationSummary, MessagingService } from './messaging.
       </section>
     </div>
   `,
-  styles: `.layout { display: flex; gap: 1.5rem; } nav { min-width: 12rem; } .conv { display: block; width: 100%; text-align: left; margin: .2rem 0; } .active { font-weight: bold; } .badge { background: #b00020; color: #fff; border-radius: 1rem; padding: 0 .45rem; } .mine { text-align: right; } textarea { width: 100%; max-width: 32rem; display: block; } .error { color: #b00020; }`,
+  styles: `.layout { display: flex; gap: 1.5rem; flex-wrap: wrap; } nav { flex: 0 0 13rem; } .conv { display: block; width: 100%; text-align: left; margin: .25rem 0; border-radius: 10px; } .conv.active { background: var(--orange-tint); border-color: var(--orange); color: #000; font-weight: 700; } .msg { background: var(--white); border: 1px solid var(--line); border-radius: 12px; padding: .4rem .75rem; margin: .35rem 0; max-width: 85%; } .msg.mine { margin-left: auto; background: var(--orange-tint); border-color: var(--orange); } textarea { width: 100%; max-width: 32rem; display: block; } .error { color: #b00020; }`,
 })
 export class MessagingHome implements OnInit {
   private readonly api = inject(MessagingService);
