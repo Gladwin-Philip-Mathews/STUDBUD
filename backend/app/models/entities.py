@@ -83,6 +83,14 @@ class Profile:
 
 
 @dataclass
+class Course:
+    code: str
+    name: str
+    status: str = "active"
+    id: Optional[int] = None
+
+
+@dataclass
 class Connection:
     requester_id: Optional[int]
     receiver_id: Optional[int]

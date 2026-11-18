@@ -58,3 +58,22 @@ class SettingName(str, Enum):
     SESSION_IDLE_TIME = "SESSION_IDLE_TIME"  # hours
     MESSAGE_RETENTION = "MESSAGE_RETENTION"  # days (CH-15)
     LOG_RETENTION = "LOG_RETENTION"  # days (CH-15)
+
+
+class ConnectionIntent(str, Enum):  # DR-002
+    FRIENDSHIP = "friendship"
+    STUDY_PARTNER = "study partner"
+    BOTH = "both"
+
+
+class Cohort(str, Enum):  # DR-002: used only for pilot reporting, never shown to students (FR-014)
+    FIRST_YEAR = "first year"
+    INTERNATIONAL = "international"
+    BOTH = "both"
+    NEITHER = "neither"
+    PREFER_NOT_TO_SAY = "prefer not to say"
+
+
+class RecordStatus(str, Enum):  # DR-003
+    ACTIVE = "active"
+    ARCHIVED = "archived"

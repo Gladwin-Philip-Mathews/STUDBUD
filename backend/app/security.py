@@ -28,6 +28,17 @@ def login_required(view):
     return wrapper
 
 
+def profile_required(view):
+    """FR-010: until intent and cohort are saved, other features are not available."""
+    @login_required
+    @wraps(view)
+    def wrapper(*args, **kwargs):
+        if not get_service("profiles").is_complete(g.account.id):
+            return jsonify({"message": "Complete your profile first.", "needsProfile": True}), 403
+        return view(*args, **kwargs)
+    return wrapper
+
+
 def role_required(*roles: Role):
     def decorator(view):
         @login_required

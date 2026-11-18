@@ -18,7 +18,7 @@ from flask import current_app, g
 
 from .db import connect, init_db
 from .repositories import (
-    SqliteAccountRepository, SqliteConnectionRepository, SqliteNotificationRepository,
+    SqliteAccountRepository, SqliteConnectionRepository, SqliteCourseRepository, SqliteNotificationRepository,
     SqliteProfileRepository, SqliteVerificationTokenRepository,
 )
 from .settings import SettingsProvider
@@ -74,6 +74,7 @@ def get_deps():
             tokens=SqliteVerificationTokenRepository(db),
             profiles=SqliteProfileRepository(db),
             connections=SqliteConnectionRepository(db),
+            courses=SqliteCourseRepository(db),
             notifications=SqliteNotificationRepository(db),
             gateway=current_app.extensions["email_gateway"],
             on_email_pending=_flag_email_pending,

@@ -8,13 +8,15 @@ from app.repositories import SqliteAccountRepository, SqliteProfileRepository
 PASSWORD = "passw0rdX"
 
 
-def make_student(app, name, email=None, status=AccountStatus.VERIFIED, profile=None):
+def make_student(app, name, email=None, status=AccountStatus.VERIFIED, profile=None, with_profile=True):
     """Create an account (and optional Profile) directly in the database. Returns the account id."""
     conn = connect(app.config["DATABASE_PATH"])
     try:
         acct = SqliteAccountRepository(conn).add(Account(
             email or f"{name.lower()}@g.rit.edu", name,
             generate_password_hash(PASSWORD, method="pbkdf2:sha256:1000"), status=status))
+        if profile is None and with_profile:
+            profile = Profile(account_id=0)
         if profile is not None:
             profile.account_id = acct.id
             SqliteProfileRepository(conn).save(profile)

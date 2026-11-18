@@ -15,6 +15,9 @@ class AccountRepository(ABC):
     @abstractmethod
     def save(self, account): ...
     @abstractmethod
+    def erase(self, account_id: int) -> None:
+        """Delete credentials and identity but keep the row, so content shows as "deleted student" (FR-015)."""
+    @abstractmethod
     def domain_accepted(self, email: str) -> bool: ...
 
 
@@ -36,6 +39,9 @@ class ProfileRepository(ABC):
     def get(self, account_id: int): ...
     @abstractmethod
     def save(self, profile): ...
+    @abstractmethod
+    def delete(self, account_id: int) -> None:
+        """Remove profile, interests, courses and dismissed suggestions of an account (FR-015)."""
     @abstractmethod
     def candidates(self, exclude_id: int) -> list:
         """(Account, Profile) pairs for verified students other than exclude_id."""
@@ -61,6 +67,9 @@ class ConnectionRepository(ABC):
     @abstractmethod
     def dismiss(self, account_id: int, dismissed_id: int) -> None: ...
     @abstractmethod
+    def delete_for_account(self, account_id: int) -> None:
+        """Remove every connection the account is part of (FR-015)."""
+    @abstractmethod
     def dismissed_ids(self, account_id: int) -> set: ...
 
 
@@ -74,6 +83,21 @@ class NotificationRepository(ABC):
     @abstractmethod
     def save(self, notification): ...
     @abstractmethod
+    def delete_for_recipient(self, account_id: int) -> None:
+        """Remove all notifications of an account (FR-015)."""
+    @abstractmethod
     def pending_email(self) -> list: ...
     @abstractmethod
     def mark_all_read(self, account_id: int, now) -> None: ...
+
+
+class CourseRepository(ABC):
+    @abstractmethod
+    def add(self, course): ...
+    @abstractmethod
+    def find_by_code(self, code: str): ...
+    @abstractmethod
+    def active_matching(self, query: str) -> list:
+        """Active courses whose code or name contains the query (FR-011)."""
+    @abstractmethod
+    def save(self, course): ...

@@ -8,7 +8,7 @@ Status: **Done** = built and tested, **Next** = planned before 20 Nov, **Deferre
 | Store | Diagram name | Table(s) | Status |
 |---|---|---|---|
 | D1 | Accounts | `accounts`, `verification_tokens` | Done |
-| D2 | Profiles | `profiles`, `profile_interests`, `profile_courses`, `dismissed_suggestions` | Table done, service Next |
+| D2 | Profiles | `profiles`, `profile_interests`, `profile_courses`, `dismissed_suggestions` | Done |
 | D3 | Courses | `courses` | Table done, admin Next |
 | D4 | Communities | `communities` | Next |
 | D5 | Posts and replies | `posts`, `replies` | Next |
@@ -25,7 +25,7 @@ Status: **Done** = built and tested, **Next** = planned before 20 Nov, **Deferre
 | Process | Code | Status |
 |---|---|---|
 | 1.0 Register and authenticate | `AuthService`, `controllers/auth.py` | Done |
-| 2.0 Maintain profile | `ProfileService` | Next |
+| 2.0 Maintain profile | `ProfileService`, `controllers/profile.py`, `frontend/.../profiles` | Done (FR-010 to 015; FR-022 with communities) |
 | 3.0 Communities and posts | `CommunityService` | Next |
 | 4.0 Manage connections | `ConnectionService`, `controllers/connections.py` | Done |
 | 5.0 Private messages | `MessagingService` | Next |

@@ -2,10 +2,10 @@
 from datetime import datetime, timezone
 from typing import Optional
 
-from ..models.entities import Account, Connection, Notification, Profile, VerificationToken
+from ..models.entities import Account, Connection, Course, Notification, Profile, VerificationToken
 from ..models.enums import AccountStatus, ConnectionStatus, EmailStatus, EventType, Role
 from .interfaces import (
-    AccountRepository, ConnectionRepository, NotificationRepository,
+    AccountRepository, ConnectionRepository, CourseRepository, NotificationRepository,
     ProfileRepository, VerificationTokenRepository,
 )
 
@@ -65,6 +65,13 @@ class SqliteAccountRepository(AccountRepository):
             (a.display_name, a.password_hash, a.status.value, a.role.value, a.failed_sign_ins,
              _s(a.first_failed_at), _s(a.locked_until), _s(a.last_sign_in_at), int(a.email_notifications), a.id),
         )
+        self.conn.commit()
+
+    def erase(self, account_id):
+        self.conn.execute(
+            "UPDATE accounts SET email=?, display_name=?, password_hash='', status='deleted', "
+            "email_notifications=0 WHERE id=?",
+            (f"deleted-{account_id}@deleted.invalid", f"deleted student {account_id}", account_id))
         self.conn.commit()
 
     def domain_accepted(self, email):
@@ -145,6 +152,13 @@ class SqliteProfileRepository(ProfileRepository):
         c.commit()
 
 
+    def delete(self, account_id):
+        for table in ("profile_interests", "profile_courses", "profiles"):
+            self.conn.execute(f"DELETE FROM {table} WHERE account_id = ?", (account_id,))
+        self.conn.execute("DELETE FROM dismissed_suggestions WHERE account_id = ? OR dismissed_id = ?",
+                          (account_id, account_id))
+        self.conn.commit()
+
     def candidates(self, exclude_id):
         accounts = SqliteAccountRepository(self.conn)
         rows = self.conn.execute(
@@ -201,6 +215,10 @@ class SqliteConnectionRepository(ConnectionRepository):
             "SELECT * FROM connections WHERE requester_id=? OR receiver_id=? ORDER BY id", (account_id, account_id)).fetchall()
         return [self._row(r) for r in rows]
 
+    def delete_for_account(self, account_id):
+        self.conn.execute("DELETE FROM connections WHERE requester_id=? OR receiver_id=?", (account_id, account_id))
+        self.conn.commit()
+
     def save(self, c: Connection):
         self.conn.execute("UPDATE connections SET status=?, note=?, status_changed_at=? WHERE id=?",
                           (c.status.value, c.note, _s(c.status_changed_at), c.id))
@@ -245,6 +263,10 @@ class SqliteNotificationRepository(NotificationRepository):
         rows = self.conn.execute("SELECT * FROM notifications WHERE recipient_id = ? ORDER BY id DESC", (account_id,)).fetchall()
         return [self._row(r) for r in rows]
 
+    def delete_for_recipient(self, account_id):
+        self.conn.execute("DELETE FROM notifications WHERE recipient_id = ?", (account_id,))
+        self.conn.commit()
+
     def save(self, n: Notification):
         self.conn.execute("UPDATE notifications SET read_at=?, email_status=?, email_resends=? WHERE id=?",
                           (_s(n.read_at), n.email_status.value, n.email_resends, n.id))
@@ -259,4 +281,35 @@ class SqliteNotificationRepository(NotificationRepository):
     def mark_all_read(self, account_id, now):
         self.conn.execute("UPDATE notifications SET read_at = ? WHERE recipient_id = ? AND read_at IS NULL",
                           (_s(now), account_id))
+        self.conn.commit()
+
+
+class SqliteCourseRepository(CourseRepository):
+    def __init__(self, conn):
+        self.conn = conn
+
+    @staticmethod
+    def _row(r):
+        return Course(code=r["code"], name=r["name"], status=r["status"], id=r["id"])
+
+    def add(self, course):
+        cur = self.conn.execute("INSERT INTO courses(code, name, status) VALUES (?,?,?)",
+                                (course.code.strip().upper(), course.name.strip(), course.status))
+        self.conn.commit()
+        course.id = cur.lastrowid
+        return course
+
+    def find_by_code(self, code):
+        r = self.conn.execute("SELECT * FROM courses WHERE code = ?", ((code or "").strip().upper(),)).fetchone()
+        return self._row(r) if r else None
+
+    def active_matching(self, query):
+        like = f"%{(query or '').strip()}%"
+        rows = self.conn.execute(
+            "SELECT * FROM courses WHERE status='active' AND (code LIKE ? OR name LIKE ?) ORDER BY code",
+            (like, like)).fetchall()
+        return [self._row(r) for r in rows]
+
+    def save(self, course):
+        self.conn.execute("UPDATE courses SET name=?, status=? WHERE id=?", (course.name, course.status, course.id))
         self.conn.commit()
