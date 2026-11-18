@@ -12,6 +12,8 @@ DEFAULTS = {
     SettingName.OVERDUE_FLAG: 36,
     SettingName.REQUEST_DECLINE_WAIT: 30,
     SettingName.SESSION_IDLE_TIME: 2,
+    SettingName.MESSAGE_RETENTION: 120,  # days: end of the pilot plus 30 days (OR-001, CH-15)
+    SettingName.LOG_RETENTION: 365,  # days (OR-002, CH-15)
 }
 
 

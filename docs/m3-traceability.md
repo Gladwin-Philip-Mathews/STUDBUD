@@ -13,7 +13,7 @@ Status: **Done** = built and tested, **Next** = planned before 20 Nov, **Deferre
 | D4 | Communities | `communities`, `community_members` | Done |
 | D5 | Posts and replies | `posts`, `replies` | Done |
 | D6 | Connections | `connections` | Done |
-| D7 | Messages | `messages` | Next |
+| D7 | Messages | `messages` | Done |
 | D8 | Moderation Log | `safety_reports`, `moderation_outcomes` | Next |
 | D9 | Notifications | `notifications` | Done |
 | D10 | Onboarding answers | `onboarding_answers` | Next |
@@ -28,7 +28,7 @@ Status: **Done** = built and tested, **Next** = planned before 20 Nov, **Deferre
 | 2.0 Maintain profile | `ProfileService`, `controllers/profile.py`, `frontend/.../profiles` | Done (FR-010 to 015; FR-022 with communities) |
 | 3.0 Communities and posts | `CommunityService`, `controllers/communities.py`, `frontend/.../communities` | Done (FR-020 to 025, 030 to 039; admin pages with 9.0) |
 | 4.0 Manage connections | `ConnectionService`, `controllers/connections.py` | Done |
-| 5.0 Private messages | `MessagingService` | Next |
+| 5.0 Private messages | `MessagingService`, `controllers/messaging.py`, `frontend/.../messaging` | Done (FR-050 to 052, OR-001; FR-053 and 054 with moderation) |
 | 6.0 Safety reports (DFD-1: 6.1 to 6.6) | `ModerationService` (`submit_report`, `open_queue`, `acknowledge`, `decide`, `apply_action`, `case_summary`) | Next |
 | 7.0 Notifications | `NotificationService`, `EmailGateway` | Done |
 | 8.0 Pilot measures | `PilotMeasuresService` | Next |
