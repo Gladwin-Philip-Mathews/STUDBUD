@@ -49,6 +49,12 @@ class ConnectionRepository(ABC):
     @abstractmethod
     def between(self, a_id: int, b_id: int) -> list: ...
     @abstractmethod
+    def find_open_between(self, a_id: int, b_id: int):
+        """CD-1a findOpenBetween(): the pending or accepted connection between two accounts, either direction, or None."""
+    @abstractmethod
+    def last_decline_by(self, receiver_id: int, sender_id: int):
+        """CD-1a lastDeclineBy(): when the receiver last declined the sender, or None."""
+    @abstractmethod
     def for_account(self, account_id: int) -> list: ...
     @abstractmethod
     def save(self, connection): ...

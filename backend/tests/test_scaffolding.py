@@ -43,3 +43,26 @@ def test_a_feature_can_register_its_own_service_and_routes(app, client, gateway)
     sign_in(client)
     assert client.get("/api/demo/me").get_json() == {"who": "Ana Lee", "n": 1}
     assert client.get("/api/demo/admin").status_code == 403
+
+
+# ---- M3 conformance: names and behaviour from CD-1a and SD-1 ----
+def test_settings_duration_returns_a_time_span(app):
+    from datetime import timedelta
+    from app.models.enums import SettingName
+    from app.settings import SettingsProvider
+    from app.container import get_db
+    with app.app_context():
+        s = SettingsProvider(get_db())
+        assert s.duration(SettingName.REQUEST_DECLINE_WAIT) == timedelta(days=30)
+        assert s.duration(SettingName.OVERDUE_FLAG) == timedelta(hours=36)
+        assert s.value(SettingName.RESEND_LIMIT) == 3
+
+
+def test_audit_log_appends_and_has_no_edit(app):
+    from app.services.audit_log import AuditLog
+    from app.container import get_db
+    with app.app_context():
+        log = AuditLog(get_db())
+        log.record(None, "MESSAGE_READ", "message 4", "by moderator")
+        assert [e["action"] for e in log.entries()] == ["MESSAGE_READ"]
+        assert not hasattr(log, "update") and not hasattr(log, "delete")

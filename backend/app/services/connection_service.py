@@ -53,17 +53,15 @@ class ConnectionService:
         receiver = self.accounts.get(receiver_id)
         if receiver is None or receiver.status != AccountStatus.VERIFIED:
             return RefusalReason.NOT_AVAILABLE  # missing, unverified or suspended (FR-043)
-        between = self.connections.between(sender_id, receiver_id)
-        if any(c.status == ConnectionStatus.ACCEPTED for c in between):
+        open_connection = self.connections.find_open_between(sender_id, receiver_id)  # M6 to M9
+        if open_connection is not None and open_connection.status == ConnectionStatus.ACCEPTED:
             return RefusalReason.ALREADY_CONNECTED
-        if any(c.status == ConnectionStatus.PENDING for c in between):
+        if open_connection is not None:
             return RefusalReason.PENDING_EXISTS
-        wait = timedelta(days=self.settings.get(SettingName.REQUEST_DECLINE_WAIT))
-        now = self.clock()
-        for c in between:
-            if (c.status == ConnectionStatus.DECLINED and c.requester_id == sender_id
-                    and now - c.status_changed_at < wait):
-                return RefusalReason.RECENTLY_DECLINED
+        declined_at = self.connections.last_decline_by(receiver_id, sender_id)  # M10, M11
+        wait = self.settings.duration(SettingName.REQUEST_DECLINE_WAIT)  # M12, M13
+        if declined_at is not None and self.clock() - declined_at < wait:
+            return RefusalReason.RECENTLY_DECLINED
         return None
 
     def send_request(self, sender_id: int, receiver_id: int, note: str = "") -> RequestResult:
@@ -74,11 +72,15 @@ class ConnectionService:
         c = self.connections.add(Connection(sender_id, receiver_id, note=note or "", created_at=now,
                                             status_changed_at=now))
         sender = self.accounts.get(sender_id)
-        self.notifications.create(receiver_id, EventType.REQUEST_RECEIVED,
+        self.notifications.notify(receiver_id, EventType.REQUEST_RECEIVED,
                                   f"{sender.display_name} sent you a connection request.")
         return RequestResult(connection=c)
 
     # ---- answering (FR-044 to FR-046, FR-048) ----
+    def respond(self, connection_id: int, actor_id: int, accept: bool) -> Optional[Connection]:
+        """CD-1a ConnectionService.respond(): the receiver answers a pending request."""
+        return self.accept(connection_id, actor_id) if accept else self.decline(connection_id, actor_id)
+
     def _pending_for_receiver(self, connection_id, actor_id) -> Optional[Connection]:
         c = self.connections.get(connection_id)
         if c and c.status == ConnectionStatus.PENDING and c.receiver_id == actor_id:
@@ -92,7 +94,7 @@ class ConnectionService:
         c.accept(self.clock())
         self.connections.save(c)
         me = self.accounts.get(actor_id)
-        self.notifications.create(c.requester_id, EventType.REQUEST_ANSWERED,
+        self.notifications.notify(c.requester_id, EventType.REQUEST_ANSWERED,
                                   f"{me.display_name} accepted your connection request.")
         return c
 
@@ -103,7 +105,7 @@ class ConnectionService:
         c.decline(self.clock())
         self.connections.save(c)
         # FR-045: tell the requester only that the request was not accepted
-        self.notifications.create(c.requester_id, EventType.REQUEST_ANSWERED, "Your connection request was not accepted.")
+        self.notifications.notify(c.requester_id, EventType.REQUEST_ANSWERED, "Your connection request was not accepted.")
         return c
 
     def withdraw(self, connection_id: int, actor_id: int) -> Optional[Connection]:

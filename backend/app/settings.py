@@ -1,5 +1,5 @@
 """SettingsProvider: reads NFR-012 limits at run time so they change without a release."""
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 from .models.enums import SettingName
 
@@ -15,9 +15,31 @@ DEFAULTS = {
 }
 
 
+# Unit of each stored number, so callers ask for a duration and never do the arithmetic (SD-1 M12, M13)
+UNITS = {
+    SettingName.VERIFICATION_LINK_LIFE: "hours",
+    SettingName.OVERDUE_FLAG: "hours",
+    SettingName.SESSION_IDLE_TIME: "hours",
+    SettingName.LOCKOUT_WINDOW: "minutes",
+    SettingName.LOCKOUT_PERIOD: "minutes",
+    SettingName.REQUEST_DECLINE_WAIT: "days",
+    SettingName.MESSAGE_RETENTION: "days",
+    SettingName.LOG_RETENTION: "days",
+}
+
+
 class SettingsProvider:
     def __init__(self, conn):
         self.conn = conn
+
+    def value(self, name: SettingName) -> int:
+        """CD-1a SettingsProvider.value(): the stored number."""
+        return self.get(name)
+
+    def duration(self, name: SettingName) -> timedelta:
+        """CD-1a SettingsProvider.duration(): the setting as a time span."""
+        name = SettingName(name)
+        return timedelta(**{UNITS[name]: self.get(name)})
 
     def get(self, name: SettingName) -> int:
         name = SettingName(name)

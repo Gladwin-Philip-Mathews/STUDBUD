@@ -217,3 +217,30 @@ def test_suggestions_limited_to_ten(app):
         student_with(app, f"S{i:02d}", "both", ["C1"])
     got = signed_in_client(app, "Me").get("/api/connections/suggestions").get_json()["suggestions"]
     assert len(got) == 10
+
+
+def test_returned_status_triggers_resend_up_to_three_times(pair, app, gateway):  # SD-1 M32 to M35, AC-FR-084a
+    from app.container import get_service
+    from app.models.enums import EmailStatus
+    a, b, ana, ben = pair
+    send(ana, b)
+    dispatch_pending_emails(app)  # first handoff
+    assert gateway.attempts == 1
+    with app.app_context():
+        notes = get_service("notifications")
+        n_id = notes.list_for(b)[0].id
+        for _ in range(5):  # the mail route keeps returning it
+            notes.on_delivery_status(n_id, EmailStatus.RETURNED)
+    assert gateway.attempts == 4  # one handoff plus three resends, never more
+
+
+def test_respond_accepts_or_declines_for_the_receiver(pair, app):  # CD-1a respond()
+    from app.container import get_service
+    from app.models.enums import ConnectionStatus
+    a, b, ana, ben = pair
+    send(ana, b)
+    with app.app_context():
+        svc = get_service("connections")
+        cid = svc.connections.for_account(b)[0].id
+        assert svc.respond(cid, a, accept=True) is None  # only the receiver can answer
+        assert svc.respond(cid, b, accept=True).status == ConnectionStatus.ACCEPTED
