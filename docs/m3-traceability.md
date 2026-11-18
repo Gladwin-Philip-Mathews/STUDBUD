@@ -9,14 +9,14 @@ Status: **Done** = built and tested, **Next** = planned before 20 Nov, **Deferre
 |---|---|---|---|
 | D1 | Accounts | `accounts`, `verification_tokens` | Done |
 | D2 | Profiles | `profiles`, `profile_interests`, `profile_courses`, `dismissed_suggestions` | Done |
-| D3 | Courses | `courses` | Table done, admin Next |
+| D3 | Courses | `courses` | Done (admin page, CSV import) |
 | D4 | Communities | `communities`, `community_members` | Done |
 | D5 | Posts and replies | `posts`, `replies` | Done |
 | D6 | Connections | `connections` | Done |
 | D7 | Messages | `messages` | Done |
 | D8 | Moderation Log | `safety_reports`, `moderation_outcomes`, `outcome_notes` (append-only) | Done |
 | D9 | Notifications | `notifications` | Done |
-| D10 | Onboarding answers | `onboarding_answers` | Next |
+| D10 | Onboarding answers | `onboarding_answers` | Done |
 | D11 | Settings | `settings`, `accepted_domains` | Done |
 | D12 | Audit Record | `audit_records` | Done |
 
@@ -31,8 +31,8 @@ Status: **Done** = built and tested, **Next** = planned before 20 Nov, **Deferre
 | 5.0 Private messages | `MessagingService`, `controllers/messaging.py`, `frontend/.../messaging` | Done (FR-050 to 052, OR-001; FR-053 and 054 with moderation) |
 | 6.0 Safety reports (DFD-1: 6.1 to 6.6) | `ModerationService` (`submit_report` 6.1, `open_queue` 6.2, `acknowledge` 6.3, `decide` 6.4, `apply_action` 6.5, `case_summary` 6.6), `controllers/moderation.py` | Done (FR-053, 054, 060 to 070; FR-070 summary on demand, DF-24 and DF-25 stay proposed) |
 | 7.0 Notifications | `NotificationService`, `EmailGateway` | Done |
-| 8.0 Pilot measures | `PilotMeasuresService` | Next |
-| 9.0 Administer system | `AdminService` | Next |
+| 8.0 Pilot measures | `PilotService`, `controllers/onboarding.py`, `OnboardingQuestionCard` | Done (FR-090 to 094) |
+| 9.0 Administer system | `AdminService`, `controllers/admin.py`, `frontend/.../admin` | Done (FR-100 to 104) |
 
 ## Classes and operations (CD-1a) and SD-1
 

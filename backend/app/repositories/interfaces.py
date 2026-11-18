@@ -15,6 +15,8 @@ class AccountRepository(ABC):
     @abstractmethod
     def save(self, account): ...
     @abstractmethod
+    def with_role(self, role) -> list: ...
+    @abstractmethod
     def erase(self, account_id: int) -> None:
         """Delete credentials and identity but keep the row, so content shows as "deleted student" (FR-015)."""
     @abstractmethod
@@ -67,6 +69,9 @@ class ConnectionRepository(ABC):
     @abstractmethod
     def dismiss(self, account_id: int, dismissed_id: int) -> None: ...
     @abstractmethod
+    def archive_timings(self, account_id: int) -> None:
+        """Keep each request's timing and outcome without identities before the account's requests are deleted (FR-091)."""
+    @abstractmethod
     def delete_for_account(self, account_id: int) -> None:
         """Remove every connection the account is part of (FR-015)."""
     @abstractmethod
@@ -96,6 +101,8 @@ class CourseRepository(ABC):
     def add(self, course): ...
     @abstractmethod
     def find_by_code(self, code: str): ...
+    @abstractmethod
+    def all(self) -> list: ...
     @abstractmethod
     def active_matching(self, query: str) -> list:
         """Active courses whose code or name contains the query (FR-011)."""

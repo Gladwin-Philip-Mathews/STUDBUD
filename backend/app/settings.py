@@ -50,6 +50,10 @@ class SettingsProvider:
             return int(row["value"])
         return DEFAULTS[name]
 
+    def all(self) -> list:
+        """Every setting with its value and unit, for the administration page (FR-104)."""
+        return [{"name": n.value, "value": self.get(n), "unit": UNITS.get(n, "count")} for n in SettingName]
+
     def set(self, name, value: int, changed_by=None) -> None:
         # DR-014: a name outside the NFR-012 list cannot be stored
         name = SettingName(name)

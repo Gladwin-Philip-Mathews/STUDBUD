@@ -15,6 +15,7 @@
     @if (a.role === 'moderator') { <a routerLink="/moderation">Moderation</a> }
     @if (a.role === 'administrator') { <a routerLink="/admin">Admin</a> }
   </nav>
+  <app-onboarding-question />
 }
 <main>
   <router-outlet />
