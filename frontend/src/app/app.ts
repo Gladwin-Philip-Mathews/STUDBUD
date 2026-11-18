@@ -4,10 +4,11 @@ import { NavigationEnd, Router, RouterLink, RouterOutlet } from '@angular/router
 import { filter } from 'rxjs';
 import { AuthService } from './auth/auth.service';
 import { NotificationsService } from './notifications/notifications.service';
+import { OnboardingQuestionCard } from './profiles/onboarding-question';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, RouterLink],
+  imports: [RouterOutlet, RouterLink, OnboardingQuestionCard],
   templateUrl: './app.html',
   styleUrl: './app.scss'
 })

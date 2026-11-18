@@ -67,6 +67,10 @@ class SqliteAccountRepository(AccountRepository):
         )
         self.conn.commit()
 
+    def with_role(self, role):
+        rows = self.conn.execute("SELECT * FROM accounts WHERE role=? AND status != 'deleted' ORDER BY id", (role.value,)).fetchall()
+        return [self._row(r) for r in rows]
+
     def erase(self, account_id):
         self.conn.execute(
             "UPDATE accounts SET email=?, display_name=?, password_hash='', status='deleted', "
@@ -215,6 +219,14 @@ class SqliteConnectionRepository(ConnectionRepository):
             "SELECT * FROM connections WHERE requester_id=? OR receiver_id=? ORDER BY id", (account_id, account_id)).fetchall()
         return [self._row(r) for r in rows]
 
+    def archive_timings(self, account_id):
+        self.conn.execute(
+            "INSERT INTO request_timings(sent_at, outcome, outcome_at, requester_cohort, requester_intent) "
+            "SELECT c.created_at, c.status, c.status_changed_at, p.cohort, p.intent FROM connections c "
+            "LEFT JOIN profiles p ON p.account_id = c.requester_id WHERE c.requester_id=? OR c.receiver_id=?",
+            (account_id, account_id))
+        self.conn.commit()
+
     def delete_for_account(self, account_id):
         self.conn.execute("DELETE FROM connections WHERE requester_id=? OR receiver_id=?", (account_id, account_id))
         self.conn.commit()
@@ -302,6 +314,9 @@ class SqliteCourseRepository(CourseRepository):
     def find_by_code(self, code):
         r = self.conn.execute("SELECT * FROM courses WHERE code = ?", ((code or "").strip().upper(),)).fetchone()
         return self._row(r) if r else None
+
+    def all(self):
+        return [self._row(r) for r in self.conn.execute("SELECT * FROM courses ORDER BY code")]
 
     def active_matching(self, query):
         like = f"%{(query or '').strip()}%"

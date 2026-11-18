@@ -60,9 +60,11 @@ class ProfileService:
             errors["interests"] = f"You can add up to {MAX_INTERESTS} interests."
 
         clean_courses = []
+        existing = self.profiles.get(account_id)
+        kept = set(existing.course_codes) if existing else set()  # AC-FR-100b: archived courses already held stay
         for code in course_codes or []:
             course = self.courses.find_by_code(code) if isinstance(code, str) else None
-            if course is None or course.status != "active":
+            if course is None or (course.status != "active" and course.code not in kept):
                 errors["courses"] = "Only courses from the course list can be added."  # AC-FR-011a
                 break
             if course.code not in clean_courses:
@@ -112,6 +114,7 @@ class ProfileService:
         account = self.accounts.get(account_id)
         if account is None or not check_password_hash(account.password_hash, password or ""):
             return False
+        self.connections.archive_timings(account_id)  # FR-091: timing is kept, identities are not
         self.connections.delete_for_account(account_id)  # messages go with their connection (DR-008)
         self.notifications.delete_for_recipient(account_id)
         self.profiles.delete(account_id)
