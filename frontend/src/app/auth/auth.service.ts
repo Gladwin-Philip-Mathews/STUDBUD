@@ -25,6 +25,8 @@ function toResult(e: HttpErrorResponse): ApiResult {
 export class AuthService {
   private readonly http = inject(HttpClient);
   readonly account = signal<Account | null>(null);
+  /** FR-010: false until intent and cohort are saved. The backend decides; this only steers the page. */
+  readonly profileComplete = signal(false);
 
   register(email: string, displayName: string, password: string): Observable<ApiResult> {
     return this.http.post<{ message: string }>('/api/auth/register', { email, displayName, password }).pipe(
@@ -64,7 +66,8 @@ export class AuthService {
 
   /** Asks the backend who is signed in. Used by the route guard (the backend decides, NFR-013). */
   loadMe(): Observable<Account | null> {
-    return this.http.get<{ account: Account }>('/api/auth/me').pipe(
+    return this.http.get<{ account: Account; profileComplete: boolean }>('/api/auth/me').pipe(
+      tap((r) => this.profileComplete.set(r.profileComplete)),
       map((r) => r.account),
       catchError(() => of(null)),
       tap((a) => this.account.set(a))

@@ -3,7 +3,7 @@ from flask import Blueprint, g, jsonify, request
 
 from ..container import get_service
 from ..models.enums import RefusalReason
-from ..security import login_required
+from ..security import profile_required
 
 bp = Blueprint("connections", __name__, url_prefix="/api/connections")
 
@@ -27,7 +27,7 @@ def connection_json(c, other=None):
 
 
 @bp.post("/requests")
-@login_required
+@profile_required
 def send_request():
     data = request.get_json(silent=True) or {}
     receiver_id = data.get("receiverId")
@@ -40,19 +40,19 @@ def send_request():
 
 
 @bp.get("")
-@login_required
+@profile_required
 def accepted():
     return jsonify({"connections": get_service("connections").accepted_for(g.account.id)})
 
 
 @bp.get("/incoming")
-@login_required
+@profile_required
 def incoming():
     return jsonify({"requests": [connection_json(c, o) for c, o in get_service("connections").incoming(g.account.id)]})
 
 
 @bp.get("/outgoing")
-@login_required
+@profile_required
 def outgoing():
     return jsonify({"requests": [connection_json(c, o) for c, o in get_service("connections").outgoing(g.account.id)]})
 
@@ -65,31 +65,31 @@ def _answer(action):
 
 
 @bp.post("/<int:connection_id>/accept")
-@login_required
+@profile_required
 def accept(connection_id):
     return _answer("accept")
 
 
 @bp.post("/<int:connection_id>/decline")
-@login_required
+@profile_required
 def decline(connection_id):
     return _answer("decline")
 
 
 @bp.post("/<int:connection_id>/withdraw")
-@login_required
+@profile_required
 def withdraw(connection_id):
     return _answer("withdraw")
 
 
 @bp.post("/<int:connection_id>/remove")
-@login_required
+@profile_required
 def remove(connection_id):
     return _answer("remove")
 
 
 @bp.get("/suggestions")
-@login_required
+@profile_required
 def suggestions():
     items = get_service("connections").suggestions(g.account.id)
     return jsonify({"suggestions": [
@@ -98,7 +98,7 @@ def suggestions():
 
 
 @bp.post("/suggestions/<int:account_id>/dismiss")
-@login_required
+@profile_required
 def dismiss(account_id):
     get_service("connections").dismiss_suggestion(g.account.id, account_id)
     return jsonify({"message": "Dismissed."}), 200

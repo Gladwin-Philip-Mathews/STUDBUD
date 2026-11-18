@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { authGuard } from './auth/auth.guard';
+import { authGuard, profileGuard } from './auth/auth.guard';
 import { Register } from './auth/register';
 import { SignIn } from './auth/sign-in';
 import { NotificationsPage } from './notifications/notifications-page';
@@ -7,9 +7,9 @@ import { Verify } from './auth/verify';
 
 // Each feature lives in its own folder and loads on demand. Teammates edit only their own
 // <feature>/<feature>.routes.ts, not this file.
-const feature = (path: string, load: () => Promise<{ routes: Routes }>) => ({
+const feature = (path: string, load: () => Promise<{ routes: Routes }>, needsProfile = true) => ({
   path,
-  canActivate: [authGuard],
+  canActivate: [needsProfile ? profileGuard : authGuard],
   loadChildren: () => load().then((m) => m.routes),
 });
 
@@ -19,7 +19,7 @@ export const routes: Routes = [
   { path: 'verify', component: Verify },
   { path: 'sign-in', component: SignIn },
   { path: 'profile', pathMatch: 'full', redirectTo: 'profiles' },
-  feature('profiles', () => import('./profiles/profiles.routes')),
+  feature('profiles', () => import('./profiles/profiles.routes'), false),
   feature('communities', () => import('./communities/communities.routes')),
   feature('connections', () => import('./connections/connections.routes')),
   { path: 'notifications', component: NotificationsPage, canActivate: [authGuard] },

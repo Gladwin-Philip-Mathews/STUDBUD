@@ -72,4 +72,5 @@ def me():
     account = get_service("auth").current_account(session)
     if account is None:
         return jsonify({"message": "Not signed in."}), 401
-    return jsonify({"account": account_json(account)}), 200
+    return jsonify({"account": account_json(account),
+                    "profileComplete": get_service("profiles").is_complete(account.id)}), 200
