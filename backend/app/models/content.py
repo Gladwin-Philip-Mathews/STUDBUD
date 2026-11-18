@@ -72,3 +72,20 @@ class Reply(Reportable):
 
     def can_edit(self, now: datetime) -> bool:
         return self.status == "visible" and now - self.created_at <= EDIT_WINDOW
+
+
+@dataclass
+class Message(Reportable):
+    connection_id: int
+    sender_id: int
+    body: str
+    sent_at: datetime
+    status: str = "visible"  # visible | hidden (DR-008)
+    read_at: Optional[datetime] = None
+    id: Optional[int] = None
+
+    def author(self) -> int:
+        return self.sender_id
+
+    def hide(self) -> None:
+        self.status = "hidden"
