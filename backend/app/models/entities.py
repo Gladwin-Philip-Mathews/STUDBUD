@@ -20,6 +20,7 @@ class Account:
     locked_until: Optional[datetime] = None
     last_sign_in_at: Optional[datetime] = None
     email_notifications: bool = True
+    verified_at: Optional[datetime] = None  # DR-001 verification time
     notice_accepted_at: Optional[datetime] = None  # OR-003: when the conduct and privacy notice was accepted
     created_at: Optional[datetime] = None
     id: Optional[int] = None
@@ -48,6 +49,11 @@ class Account:
         self.first_failed_at = None
         self.locked_until = None
         self.last_sign_in_at = now
+
+    def is_active_student(self, now: datetime, days: int = 7) -> bool:
+        """CD-1a: verified, not suspended and signed in within the last days (FR-092, FR-103)."""
+        return (self.status == AccountStatus.VERIFIED and self.last_sign_in_at is not None
+                and now - self.last_sign_in_at <= timedelta(days=days))
 
     def suspend(self) -> None:
         self.status = AccountStatus.SUSPENDED
