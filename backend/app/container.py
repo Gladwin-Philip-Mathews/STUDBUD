@@ -20,6 +20,7 @@ from .db import connect, init_db
 from .repositories import (
     SqliteAccountRepository, SqliteConnectionRepository, SqliteCourseRepository, SqliteNotificationRepository,
     SqliteProfileRepository, SqliteVerificationTokenRepository,
+    SqliteCommunityRepository, SqlitePostRepository,
 )
 from .settings import SettingsProvider
 
@@ -75,6 +76,8 @@ def get_deps():
             profiles=SqliteProfileRepository(db),
             connections=SqliteConnectionRepository(db),
             courses=SqliteCourseRepository(db),
+            communities=SqliteCommunityRepository(db),
+            posts=SqlitePostRepository(db),
             notifications=SqliteNotificationRepository(db),
             gateway=current_app.extensions["email_gateway"],
             on_email_pending=_flag_email_pending,

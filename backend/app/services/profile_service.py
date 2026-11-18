@@ -25,8 +25,9 @@ class ProfileResult:
 
 
 class ProfileService:
-    def __init__(self, accounts, profiles, courses, connections, notifications, tokens):
+    def __init__(self, accounts, profiles, courses, connections, notifications, tokens, communities=None):
         self.accounts, self.profiles, self.courses = accounts, profiles, courses
+        self.communities = communities
         self.connections, self.notifications, self.tokens = connections, notifications, tokens
 
     def get(self, account_id: int) -> Optional[Profile]:
@@ -72,7 +73,26 @@ class ProfileService:
         profile = Profile(account_id=account_id, intent=intent, cohort=cohort, year_of_study=year_of_study,
                           interests=clean_interests, course_codes=clean_courses)
         self.profiles.save(profile)
+        self._sync_course_communities(account_id, clean_courses)
         return ProfileResult(profile=profile)
+
+    def _sync_course_communities(self, account_id: int, course_codes: list) -> None:
+        """FR-022: adding a course adds the student to its community; removing it takes the student out."""
+        if self.communities is None:
+            return
+        from ..models.content import Community
+        wanted = set()
+        for code in course_codes:
+            community = self.communities.find_by_course(code)
+            if community is None:  # FR-020 creates it when the course is added; this covers courses added without it
+                course = self.courses.find_by_code(code)
+                community = self.communities.add(Community(name=f"{course.code} {course.name}", kind="course",
+                                                           course_code=course.code))
+            self.communities.add_member(community.id, account_id)
+            wanted.add(community.id)
+        for community_id in self.communities.course_community_ids(account_id):
+            if community_id not in wanted:
+                self.communities.remove_member(community_id, account_id)
 
     def search_courses(self, query: str) -> list:
         return self.courses.active_matching(query)
@@ -95,10 +115,13 @@ class ProfileService:
         self.connections.delete_for_account(account_id)  # messages go with their connection (DR-008)
         self.notifications.delete_for_recipient(account_id)
         self.profiles.delete(account_id)
+        if self.communities is not None:
+            for community_id in self.communities.joined_ids(account_id):
+                self.communities.remove_member(community_id, account_id)
         self.accounts.erase(account_id)
         return True
 
 
 @service("profiles")
 def build_profile_service(d):
-    return ProfileService(d.accounts, d.profiles, d.courses, d.connections, d.notifications, d.tokens)
+    return ProfileService(d.accounts, d.profiles, d.courses, d.connections, d.notifications, d.tokens, d.communities)
