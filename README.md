@@ -18,6 +18,7 @@ pip install -r requirements.txt
 copy .env.example .env        # Mac/Linux: cp .env.example .env
 flask --app app run --debug --port 5000
 pytest
+python seed_demo.py           # optional: demo courses, communities, an admin, a moderator and students (password Demo1234)
 ```
 
 Frontend (terminal 2):
