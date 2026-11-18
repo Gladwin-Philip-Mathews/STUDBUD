@@ -33,7 +33,7 @@ class SqliteAccountRepository(AccountRepository):
             status=AccountStatus(r["status"]), role=Role(r["role"]), failed_sign_ins=r["failed_sign_ins"],
             first_failed_at=_dt(r["first_failed_at"]), locked_until=_dt(r["locked_until"]),
             last_sign_in_at=_dt(r["last_sign_in_at"]), email_notifications=bool(r["email_notifications"]),
-            notice_accepted_at=_dt(r["notice_accepted_at"]), created_at=_dt(r["created_at"]),
+            notice_accepted_at=_dt(r["notice_accepted_at"]), verified_at=_dt(r["verified_at"]), created_at=_dt(r["created_at"]),
         )
 
     def add(self, a: Account) -> Account:
@@ -61,9 +61,9 @@ class SqliteAccountRepository(AccountRepository):
     def save(self, a: Account):
         self.conn.execute(
             "UPDATE accounts SET display_name=?, password_hash=?, status=?, role=?, failed_sign_ins=?, "
-            "first_failed_at=?, locked_until=?, last_sign_in_at=?, email_notifications=? WHERE id=?",
+            "first_failed_at=?, locked_until=?, last_sign_in_at=?, email_notifications=?, verified_at=? WHERE id=?",
             (a.display_name, a.password_hash, a.status.value, a.role.value, a.failed_sign_ins,
-             _s(a.first_failed_at), _s(a.locked_until), _s(a.last_sign_in_at), int(a.email_notifications), a.id),
+             _s(a.first_failed_at), _s(a.locked_until), _s(a.last_sign_in_at), int(a.email_notifications), _s(a.verified_at), a.id),
         )
         self.conn.commit()
 

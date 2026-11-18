@@ -12,10 +12,10 @@ from typing import Callable, Optional
 
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from ..container import service
+from ..container import get_service, service
 from ..email_gateway import EmailGateway, EmailMessage
 from ..models import Account, AccountStatus, VerificationToken
-from ..models.enums import SettingName
+from ..models.enums import Role, SettingName
 
 EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
@@ -56,10 +56,11 @@ class SignInResult:
 
 class AuthService:
     def __init__(self, accounts, tokens, settings, gateway: EmailGateway, base_url: str,
-                 clock: Callable[[], datetime] = utc_now, hash_method: str = "pbkdf2:sha256"):
+                 clock: Callable[[], datetime] = utc_now, hash_method: str = "pbkdf2:sha256", audit=None):
         self.accounts, self.tokens, self.settings = accounts, tokens, settings
         self.gateway, self.base_url, self.clock = gateway, base_url.rstrip("/"), clock
         self.hash_method = hash_method
+        self.audit = audit
 
     # ---- registration (FR-001 to FR-004) ----
     def register(self, email: str, display_name: str, password: str, accepted_notice: bool = False) -> RegistrationResult:
@@ -113,6 +114,7 @@ class AuthService:
         token.used_at = now
         self.tokens.save(token)
         account.status = AccountStatus.VERIFIED
+        account.verified_at = now
         self.accounts.save(account)
         return account
 
@@ -150,6 +152,8 @@ class AuthService:
             return SignInResult(SignInOutcome.SUSPENDED)
         account.record_successful_sign_in(now)
         self.accounts.save(account)
+        if self.audit is not None and account.role != Role.STUDENT:
+            self.audit.record(account.id, "SIGN_IN", f"account {account.id}", account.role.value)  # NFR-015
         return SignInResult(SignInOutcome.OK, account)
 
     # ---- session (NFR-011, NFR-013) ----
@@ -183,4 +187,4 @@ class AuthService:
 def build_auth_service(d):
     kwargs = {"clock": d.clock} if d.clock else {}
     return AuthService(d.accounts, d.tokens, d.settings, d.gateway, d.config["BASE_URL"],
-                       hash_method=d.config["PASSWORD_HASH_METHOD"], **kwargs)
+                       hash_method=d.config["PASSWORD_HASH_METHOD"], audit=get_service("audit"), **kwargs)

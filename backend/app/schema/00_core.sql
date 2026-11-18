@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS accounts (
   last_sign_in_at TEXT,
   email_notifications INTEGER NOT NULL DEFAULT 1,
   notice_accepted_at TEXT,
+  verified_at TEXT,
   created_at TEXT NOT NULL
 );
 CREATE TABLE IF NOT EXISTS verification_tokens (

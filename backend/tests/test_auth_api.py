@@ -159,3 +159,18 @@ def test_registration_needs_the_notice_accepted_and_records_when(client, gateway
     from app.db import connect
     row = connect(app.config["DATABASE_PATH"]).execute("SELECT notice_accepted_at FROM accounts").fetchone()
     assert row["notice_accepted_at"]
+
+
+def test_verification_time_is_stored_and_staff_sign_ins_are_audited(client, gateway, app):  # DR-001, NFR-015
+    from app.db import connect
+    from app.services.audit_log import AuditLog
+    verified_account(client, gateway)
+    conn = connect(app.config["DATABASE_PATH"])
+    assert conn.execute("SELECT verified_at FROM accounts").fetchone()["verified_at"]
+    assert sign_in(client).status_code == 200
+    assert AuditLog(conn).entries("SIGN_IN") == []  # a student's sign in is not audited
+    conn.execute("UPDATE accounts SET role='moderator'")
+    conn.commit()
+    client.post("/api/auth/sign-out")
+    assert sign_in(client).status_code == 200
+    assert len(AuditLog(conn).entries("SIGN_IN")) == 1
