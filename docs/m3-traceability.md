@@ -1,7 +1,7 @@
 # M3 to code traceability
 
 How the code maps to the M3 diagrams (DFD-0, DFD-1, CD-1a/1b, SD-1). Python names use snake_case: `findOpenBetween` is `find_open_between`.
-Status: **Done** = built and tested, **Next** = planned before 20 Nov, **Deferred** = see the deferred table (to be added at the end).
+Status: **Done** = built and tested, **Next** = planned before 20 Nov, **Deferred** = see `deferred-requirements.md`.
 
 ## Data stores (DFD-0)
 
@@ -55,3 +55,5 @@ Status: **Done** = built and tested, **Next** = planned before 20 Nov, **Deferre
 | `Connection.accept()`, `decline()`, `withdraw()`, `remove()`, `isOpen()` | same, snake_case | |
 
 Controllers are Flask routes under `/api` (`docs/api.md`). `ConnectionController.sendRequest()` is `POST /api/connections`.
+
+See also `requirements-coverage.md` (requirement to code and tests), `test-report.md` and `deferred-requirements.md`.
