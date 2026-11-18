@@ -57,7 +57,7 @@ def sign_in():
     if result.outcome == SignInOutcome.LOCKED:
         return jsonify({"message": "Too many failed attempts. Try again later."}), 429
     if result.outcome == SignInOutcome.SUSPENDED:
-        return jsonify({"message": "This account is suspended."}), 403
+        return jsonify({"message": "This account is suspended under the student conduct policy. Please contact the Office of Student Affairs."}), 403
     return jsonify({"message": SIGN_IN_FAILED}), 401
 
 

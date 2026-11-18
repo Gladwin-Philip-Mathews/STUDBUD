@@ -12,7 +12,7 @@
     <a routerLink="/connections">Connections</a>
     <a routerLink="/messaging">Messages</a>
     <a routerLink="/notifications" id="notifications-link">Notifications @if (notifications.unread() > 0) { <strong class="badge">{{ notifications.unread() }}</strong> }</a>
-    @if (a.role === 'moderator' || a.role === 'administrator') { <a routerLink="/moderation">Moderation</a> }
+    @if (a.role === 'moderator') { <a routerLink="/moderation">Moderation</a> }
     @if (a.role === 'administrator') { <a routerLink="/admin">Admin</a> }
   </nav>
 }

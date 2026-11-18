@@ -77,3 +77,29 @@ class Cohort(str, Enum):  # DR-002: used only for pilot reporting, never shown t
 class RecordStatus(str, Enum):  # DR-003
     ACTIVE = "active"
     ARCHIVED = "archived"
+
+
+class ReportReason(str, Enum):  # DR-009
+    HARASSMENT = "harassment"
+    SPAM = "spam"
+    UNSAFE = "unsafe or inappropriate content"
+    ACADEMIC_INTEGRITY = "academic integrity"
+    OTHER = "other"
+
+
+class ReportStatus(str, Enum):  # DR-009
+    OPEN = "open"
+    ACKNOWLEDGED = "acknowledged"
+    CLOSED = "closed"
+
+
+class Decision(str, Enum):  # DR-010
+    UPHELD = "upheld"
+    DISMISSED = "dismissed"
+
+
+class ConductAction(str, Enum):  # DR-010
+    NONE = "none"
+    WARNING = "warning"
+    CONTENT_HIDDEN = "content hidden"
+    ACCOUNT_SUSPENDED = "account suspended"
