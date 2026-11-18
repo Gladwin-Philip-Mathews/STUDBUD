@@ -23,6 +23,8 @@ export interface PilotReport {
   groups: GroupRow[];
   weekly: { week: number; requestsSent: number; acceptedWithin7DaysPct: number | null; safetyReports: number }[];
   pilotWeek: number;
+  period: { from: string; to: string };
+  records: number;
 }
 export interface Done {
   ok: boolean;

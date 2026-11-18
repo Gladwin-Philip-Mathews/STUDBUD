@@ -20,6 +20,7 @@ class Account:
     locked_until: Optional[datetime] = None
     last_sign_in_at: Optional[datetime] = None
     email_notifications: bool = True
+    notice_accepted_at: Optional[datetime] = None  # OR-003: when the conduct and privacy notice was accepted
     created_at: Optional[datetime] = None
     id: Optional[int] = None
 

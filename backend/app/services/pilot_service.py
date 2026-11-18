@@ -139,7 +139,10 @@ class PilotMeasuresService:
             out.upheld_reports = upheld[name]
             out.active_users = active[name]
             out.upheld_per_100_active = round(100 * upheld[name] / active[name], 1) if active[name] else None
-        return {"groups": sorted(rows.values(), key=lambda r: r.cohort), "weekly": self._weekly(), "pilotWeek": self.pilot_week(now)}
+        start = self.data.first_registration() or now
+        records = len(self.data.request_rows()) + len(self.data.report_rows()) + len(self.onboarding.all())
+        return {"groups": sorted(rows.values(), key=lambda r: r.cohort), "weekly": self._weekly(), "pilotWeek": self.pilot_week(now),
+                "period": {"from": start.date().isoformat(), "to": now.date().isoformat()}, "records": records}  # NFR-024
 
     def _weekly(self) -> list:
         start = self.data.first_registration()
@@ -173,6 +176,9 @@ class PilotMeasuresService:
                         ";".join(f"{k}={v}" for k, v in sorted(g.week12_answers.items())),
                         g.answered_both, g.contact_increased, g.safety_reports, g.acknowledged_within_48h_pct,
                         g.upheld_reports, g.active_users, g.upheld_per_100_active])
+        w.writerow([])
+        w.writerow(["period_from", "period_to", "records_used"])
+        w.writerow([data["period"]["from"], data["period"]["to"], data["records"]])
         w.writerow([])
         w.writerow(["pilot_week", "study_partner_requests", "accepted_within_7_days_pct", "safety_reports"])
         for x in data["weekly"]:

@@ -148,7 +148,8 @@ def update_setting(name):
 def pilot_report():
     data = get_service("pilot").report()
     return jsonify({"groups": [dataclasses.asdict(x) for x in data["groups"]], "weekly": data["weekly"],
-                    "pilotWeek": data["pilotWeek"]})
+                    "pilotWeek": data["pilotWeek"],
+                    "period": data["period"], "records": data["records"]})
 
 
 @bp.get("/pilot-report.csv")

@@ -24,6 +24,14 @@ import { AuthService } from './auth.service';
       </label>
       @if (errors()['password']) { <p class="error" id="password-error">{{ errors()['password'] }}</p> }
 
+      <section class="notice-box" id="conduct-notice">
+        <p><strong>Conduct and privacy notice</strong></p>
+        <p>Posts and messages must follow the RIT conduct rules. Harassment and intimidation are conduct violations in every channel and can be reported.</p>
+        <p>StudBud stores your RIT email, display name, profile, posts, messages and connections. Other students see only your display name, interests, courses and connection intent. Moderators can read a message only through a safety report. Nothing is shared with outside parties.</p>
+      </section>
+      <label class="check"><input name="acceptNotice" type="checkbox" [(ngModel)]="acceptNotice" /> I accept this notice</label>
+      @if (errors()['acceptNotice']) { <p class="error" id="notice-error">{{ errors()['acceptNotice'] }}</p> }
+
       <button type="submit" [disabled]="busy()">Register</button>
     </form>
     @if (message()) { <p class="notice" id="register-message">{{ message() }}</p> }
@@ -35,13 +43,14 @@ export class Register {
   email = '';
   displayName = '';
   password = '';
+  acceptNotice = false;
   readonly errors = signal<Record<string, string>>({});
   readonly message = signal('');
   readonly busy = signal(false);
 
   submit(): void {
     this.busy.set(true);
-    this.auth.register(this.email, this.displayName, this.password).subscribe((r) => {
+    this.auth.register(this.email, this.displayName, this.password, this.acceptNotice).subscribe((r) => {
       this.busy.set(false);
       this.errors.set(r.errors ?? {});
       this.message.set(r.ok ? (r.message ?? '') : '');

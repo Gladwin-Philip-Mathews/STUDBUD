@@ -62,7 +62,7 @@ class AuthService:
         self.hash_method = hash_method
 
     # ---- registration (FR-001 to FR-004) ----
-    def register(self, email: str, display_name: str, password: str) -> RegistrationResult:
+    def register(self, email: str, display_name: str, password: str, accepted_notice: bool = False) -> RegistrationResult:
         email = (email or "").strip().lower()
         display_name = (display_name or "").strip()
         errors = {}
@@ -78,13 +78,16 @@ class AuthService:
             existing = self.accounts.find_by_email(email) if "email" not in errors else None
             if existing is None or existing.display_name.lower() != display_name.lower():
                 errors["displayName"] = "That display name is already used."
+        if accepted_notice is not True:
+            errors["acceptNotice"] = "Accept the conduct and privacy notice to create an account."  # OR-003
         if errors:
             return RegistrationResult(False, errors)
 
         if self.accounts.find_by_email(email) is not None:
             # FR-004: no second account; the caller shows one message that reveals nothing
             return RegistrationResult(True)
-        account = self.accounts.add(Account(email, display_name, generate_password_hash(password, method=self.hash_method)))
+        account = self.accounts.add(Account(email, display_name, generate_password_hash(password, method=self.hash_method),
+                                         notice_accepted_at=self.clock()))
         self._issue_token(account, is_resend=False)
         return RegistrationResult(True)
 

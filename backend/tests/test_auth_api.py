@@ -1,6 +1,6 @@
 import re
 
-GOOD = {"email": "ana@g.rit.edu", "displayName": "Ana Lee", "password": "passw0rdX"}
+GOOD = {"email": "ana@g.rit.edu", "displayName": "Ana Lee", "password": "passw0rdX", "acceptNotice": True}
 
 
 def token_from(gateway, index=-1):
@@ -149,3 +149,13 @@ def test_no_password_or_token_stored_in_clear(client, gateway, app):  # NFR-009
     th = c.execute("SELECT token_hash FROM verification_tokens").fetchone()[0]
     c.close()
     assert "passw0rdX" not in pw and token_from(gateway) != th
+
+
+def test_registration_needs_the_notice_accepted_and_records_when(client, gateway, app):  # OR-003
+    r = register(client, acceptNotice=False)
+    assert r.status_code == 400 and "acceptNotice" in r.get_json()["errors"]
+    assert gateway.sent == []
+    assert register(client).status_code == 202
+    from app.db import connect
+    row = connect(app.config["DATABASE_PATH"]).execute("SELECT notice_accepted_at FROM accounts").fetchone()
+    assert row["notice_accepted_at"]

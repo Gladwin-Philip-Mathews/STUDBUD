@@ -70,7 +70,7 @@ def test_archived_course_cannot_be_added_but_existing_students_keep_it(people): 
 
 def test_removing_a_domain_takes_effect_without_a_restart(people, client):  # AC-FR-101a
     ids, cl = people
-    body = {"email": "new@g.rit.edu", "displayName": "Newcomer", "password": "passw0rdX"}
+    body = {"email": "new@g.rit.edu", "displayName": "Newcomer", "password": "passw0rdX", "acceptNotice": True}
     assert cl["Root"].delete("/api/admin/domains/g.rit.edu").status_code == 200
     assert client.post("/api/auth/register", json=body).status_code == 400
     assert cl["Root"].post("/api/admin/domains", json={"domain": "g.rit.edu"}).status_code == 201

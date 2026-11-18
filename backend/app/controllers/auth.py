@@ -19,7 +19,8 @@ def account_json(a):
 @bp.post("/register")
 def register():
     data = request.get_json(silent=True) or {}
-    result = get_service("auth").register(data.get("email"), data.get("displayName"), data.get("password"))
+    result = get_service("auth").register(data.get("email"), data.get("displayName"), data.get("password"),
+                                          data.get("acceptNotice") is True)
     if not result.ok:
         return jsonify({"errors": result.field_errors}), 400
     return jsonify({"message": REGISTERED_MESSAGE}), 202

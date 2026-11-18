@@ -31,6 +31,14 @@ def answer(client, value):
     return client.post("/api/onboarding/answer", json={"answer": value})
 
 
+def test_report_states_its_period_and_the_records_used(app):  # NFR-024
+    from app.container import get_service
+    with app.app_context():
+        data = get_service("pilot").report()
+        assert set(data["period"]) == {"from", "to"} and isinstance(data["records"], int)
+        assert "period_from" in get_service("pilot").report_csv()
+
+
 def test_question_is_asked_once_and_skipping_is_recorded(app, clock):  # AC-FR-090a
     sid = make_student(app, "Stu")
     sql(app, "UPDATE accounts SET created_at=? WHERE id=?", iso(clock, days=3), sid)
