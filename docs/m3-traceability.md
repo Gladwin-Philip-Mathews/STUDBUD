@@ -10,8 +10,8 @@ Status: **Done** = built and tested, **Next** = planned before 20 Nov, **Deferre
 | D1 | Accounts | `accounts`, `verification_tokens` | Done |
 | D2 | Profiles | `profiles`, `profile_interests`, `profile_courses`, `dismissed_suggestions` | Done |
 | D3 | Courses | `courses` | Table done, admin Next |
-| D4 | Communities | `communities` | Next |
-| D5 | Posts and replies | `posts`, `replies` | Next |
+| D4 | Communities | `communities`, `community_members` | Done |
+| D5 | Posts and replies | `posts`, `replies` | Done |
 | D6 | Connections | `connections` | Done |
 | D7 | Messages | `messages` | Next |
 | D8 | Moderation Log | `safety_reports`, `moderation_outcomes` | Next |
@@ -26,7 +26,7 @@ Status: **Done** = built and tested, **Next** = planned before 20 Nov, **Deferre
 |---|---|---|
 | 1.0 Register and authenticate | `AuthService`, `controllers/auth.py` | Done |
 | 2.0 Maintain profile | `ProfileService`, `controllers/profile.py`, `frontend/.../profiles` | Done (FR-010 to 015; FR-022 with communities) |
-| 3.0 Communities and posts | `CommunityService` | Next |
+| 3.0 Communities and posts | `CommunityService`, `controllers/communities.py`, `frontend/.../communities` | Done (FR-020 to 025, 030 to 039; admin pages with 9.0) |
 | 4.0 Manage connections | `ConnectionService`, `controllers/connections.py` | Done |
 | 5.0 Private messages | `MessagingService` | Next |
 | 6.0 Safety reports (DFD-1: 6.1 to 6.6) | `ModerationService` (`submit_report`, `open_queue`, `acknowledge`, `decide`, `apply_action`, `case_summary`) | Next |
