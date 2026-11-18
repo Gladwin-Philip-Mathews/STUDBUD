@@ -47,7 +47,7 @@ import { ACTIONS, DECISIONS, ModerationService, QueueReport } from './moderation
     @if (summaryError()) { <p class="error">{{ summaryError() }}</p> }
     @if (summary()) { <pre>{{ summary() }}</pre> }
   `,
-  styles: `.overdue { border-left: 4px solid #b00020; padding-left: .6rem; } .flag { color: #b00020; font-size: .8em; } article { margin: 1rem 0; } textarea, select { display: block; margin: .3rem 0; } .error { color: #b00020; }`,
+  styles: `.overdue { border-left: 4px solid #b00020; padding-left: .6rem; } .flag { color: #b00020; font-size: .8em; } article { margin: .75rem 0; background: var(--white); border: 1px solid var(--line); border-radius: 10px; padding: .75rem 1rem; } textarea, select { display: block; margin: .3rem 0; } .error { color: #b00020; }`,
 })
 export class ModerationHome implements OnInit {
   private readonly api = inject(ModerationService);

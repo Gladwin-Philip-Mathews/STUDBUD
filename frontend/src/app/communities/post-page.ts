@@ -46,7 +46,7 @@ import { CommunitiesService, Post } from './communities.service';
       <p>This post is not available.</p>
     }
   `,
-  styles: `textarea { display: block; width: 100%; max-width: 40rem; margin: .4rem 0; } .reply { margin: .4rem 0; } .error { color: #b00020; }`,
+  styles: `textarea { display: block; width: 100%; max-width: 40rem; margin: .4rem 0; } .reply { margin: .5rem 0; background: var(--white); border: 1px solid var(--line); border-radius: 10px; padding: .6rem .9rem; display: flex; gap: .6rem; align-items: center; flex-wrap: wrap; } button { margin-right: .4rem; } .error { color: #b00020; }`,
 })
 export class PostPage implements OnInit {
   private readonly api = inject(CommunitiesService);

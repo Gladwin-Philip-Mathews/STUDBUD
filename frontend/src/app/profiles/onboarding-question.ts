@@ -13,7 +13,7 @@ import { OnboardingQuestion, OnboardingService } from './onboarding.service';
       </section>
     }
   `,
-  styles: `.onboarding { border: 1px solid #99c; padding: .6rem; margin: .5rem 0; } button { margin-right: .4rem; }`,
+  styles: `button { margin-right: .4rem; }`,
 })
 export class OnboardingQuestionCard implements OnInit {
   private readonly api = inject(OnboardingService);

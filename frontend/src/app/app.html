@@ -1,23 +1,27 @@
-<header>
-  <h1>StudBud</h1>
-  @if (auth.account(); as a) {
-    <span>{{ a.displayName }}</span>
-    <button type="button" id="sign-out" (click)="signOut()">Sign out</button>
-  }
+<header class="site-header">
+  <div class="inner">
+    <h1 class="brand"><a routerLink="/">Stud<span>Bud</span></a></h1>
+    @if (auth.account(); as a) {
+      <span class="who">{{ a.displayName }}</span>
+      <button type="button" id="sign-out" (click)="signOut()">Sign out</button>
+    }
+  </div>
 </header>
 @if (auth.account(); as a) {
-  <nav>
-    <a routerLink="/profiles">Profile</a>
-    <a routerLink="/communities">Communities</a>
-    <a routerLink="/connections">Connections</a>
-    <a routerLink="/messaging">Messages</a>
-    <a routerLink="/notifications" id="notifications-link">Notifications @if (notifications.unread() > 0) { <strong class="badge">{{ notifications.unread() }}</strong> }</a>
-    @if (a.role === 'moderator') { <a routerLink="/moderation">Moderation</a> }
-    @if (a.role === 'administrator') { <a routerLink="/admin">Admin</a> }
+  <nav aria-label="Main">
+    <div class="inner">
+      <a routerLink="/profiles" routerLinkActive="active">Profile</a>
+      <a routerLink="/communities" routerLinkActive="active">Communities</a>
+      <a routerLink="/connections" routerLinkActive="active">Connections</a>
+      <a routerLink="/messaging" routerLinkActive="active">Messages</a>
+      <a routerLink="/notifications" routerLinkActive="active" id="notifications-link">Notifications @if (notifications.unread() > 0) { <strong class="badge">{{ notifications.unread() }}</strong> }</a>
+      @if (a.role === 'moderator') { <a routerLink="/moderation" routerLinkActive="active">Moderation</a> }
+      @if (a.role === 'administrator') { <a routerLink="/admin" routerLinkActive="active">Admin</a> }
+    </div>
   </nav>
-  <app-onboarding-question />
 }
 <main>
+  @if (auth.account()) { <app-onboarding-question /> }
   <router-outlet />
 </main>
 <footer><small>Backend status: <strong>{{ apiStatus() }}</strong></small></footer>

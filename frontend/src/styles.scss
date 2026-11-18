@@ -1,1 +1,104 @@
-/* You can add global styles to this file, and also import other style files */
+/* StudBud look. Colours and type follow the RIT brand pages: RIT orange #F76902, black, warm greys, and the
+   brand sans-serif stack. Orange is used for fills with black text (7:1) and never for small text on white (3:1). */
+:root {
+  --orange: #f76902;
+  --orange-ink: #b34700;        /* links and small orange text: 5.5:1 on white */
+  --orange-tint: #ffefe3;
+  --ink: #111111;
+  --muted: #4b5359;             /* 7.8:1 on white */
+  --line: #d0d3d4;
+  --paper: #f4f3f1;
+  --white: #ffffff;
+  --danger: #b00020;
+  --ok: #1b5e20;
+  --radius: 10px;
+  --font: "Neue Haas Grotesk Text Pro", "Neue Haas Grotesk Display Pro", "Helvetica Neue", Helvetica, Roboto, Arial, sans-serif;
+}
+* { box-sizing: border-box; }
+html { font-size: 100%; }
+body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--font); font-size: 1rem; line-height: 1.5; }
+h1, h2, h3 { line-height: 1.2; font-weight: 700; margin: 0 0 .75rem; }
+h2 { font-size: 1.625rem; margin-top: .25rem; }
+h3 { font-size: 1.125rem; margin-top: 1.75rem; padding-bottom: .35rem; border-bottom: 2px solid var(--line); }
+p { margin: .5rem 0; }
+small { color: var(--muted); font-size: .875rem; }
+a { color: var(--orange-ink); text-decoration: underline; text-underline-offset: 2px; }
+a:hover { color: var(--ink); }
+:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; }
+
+/* Forms */
+form { display: grid; gap: .75rem; }
+label { display: grid; gap: .3rem; font-weight: 500; }
+label.check { display: flex; align-items: center; gap: .5rem; font-weight: 400; }
+input, select, textarea {
+  font: inherit; color: var(--ink); background: var(--white); width: 100%;
+  padding: .6rem .75rem; border: 1px solid #7c878e; border-radius: 8px;
+}
+input[type="checkbox"], input[type="radio"] { width: auto; accent-color: var(--orange-ink); }
+textarea { resize: vertical; }
+input:focus, select:focus, textarea:focus { border-color: var(--ink); }
+::placeholder { color: #5f686e; }
+
+/* Buttons: outline by default, orange with black text for the main action */
+button {
+  font: inherit; font-weight: 600; cursor: pointer; padding: .5rem 1rem; border-radius: 999px;
+  border: 1.5px solid var(--ink); background: var(--white); color: var(--ink);
+}
+button:hover { background: var(--ink); color: var(--white); }
+button:disabled { opacity: .55; cursor: not-allowed; }
+button[type="submit"], button.primary, .accept, .connect, .publish, .save, .send, .send-reply, .send-message,
+.send-report, .add-course, .decide, .ack {
+  background: var(--orange); border-color: var(--orange); color: #000;
+}
+button[type="submit"]:hover, button.primary:hover, .accept:hover, .connect:hover, .publish:hover, .save:hover,
+.send:hover, .send-reply:hover, .send-message:hover, .send-report:hover, .add-course:hover, .decide:hover, .ack:hover {
+  background: #000; border-color: #000; color: var(--white);
+}
+.decline, .delete, .danger { border-color: var(--danger); color: var(--danger); }
+.decline:hover, .delete:hover, .danger:hover { background: var(--danger); color: var(--white); }
+.skip, .link { border-color: transparent; background: none; color: var(--orange-ink); text-decoration: underline; padding-inline: .4rem; }
+
+/* Messages */
+.error { color: var(--danger); font-weight: 500; margin: .25rem 0; }
+.notice { color: var(--ok); font-weight: 500; }
+p.notice, p#admin-message, p#feed-message { background: var(--white); border-left: 4px solid var(--ok); padding: .5rem .75rem; border-radius: 4px; }
+.badge { display: inline-block; min-width: 1.3rem; text-align: center; background: var(--orange); color: #000; border-radius: 999px; padding: 0 .4rem; font-size: .8rem; font-weight: 700; }
+
+/* Rows and cards: lists of people, communities, requests */
+.row {
+  display: flex; align-items: center; gap: .75rem; flex-wrap: wrap;
+  background: var(--white); border: 1px solid var(--line); border-radius: var(--radius); padding: .75rem 1rem; margin: .5rem 0;
+}
+.row > span { flex: 1; min-width: 12rem; }
+.bar { display: flex; gap: .5rem; flex-wrap: wrap; align-items: center; margin: .5rem 0; }
+.bar input { flex: 1; min-width: 12rem; width: auto; }
+.bar select { width: auto; }
+
+/* Posts: Reddit-style cards */
+.post {
+  background: var(--white); border: 1px solid var(--line); border-radius: var(--radius); padding: .85rem 1rem; margin: .6rem 0;
+  display: grid; gap: .3rem;
+}
+.post:hover { border-color: #7c878e; }
+.post .title { font-size: 1.1rem; font-weight: 700; color: var(--ink); text-decoration: none; }
+.post .title:hover { color: var(--orange-ink); text-decoration: underline; }
+.post .meta { color: var(--muted); font-size: .875rem; }
+.kind { display: inline-block; font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; padding: .1rem .55rem;
+  border-radius: 999px; background: var(--paper); color: var(--ink); border: 1px solid var(--line); margin-right: .4rem; }
+.kind-partner { background: var(--orange-tint); border-color: var(--orange); }
+.chips { display: flex; flex-wrap: wrap; gap: .4rem; }
+.chip { background: var(--paper); border: 1px solid var(--line); border-radius: 999px; padding: .1rem .65rem; font-size: .875rem; }
+
+/* Panels */
+.onboarding, .notice-box, .report-form {
+  background: var(--orange-tint); border: 1px solid var(--orange); border-radius: var(--radius); padding: .75rem 1rem; margin: .75rem 0;
+}
+table { border-collapse: collapse; width: 100%; background: var(--white); font-size: .9rem; display: block; overflow-x: auto; }
+th, td { border: 1px solid var(--line); padding: .4rem .6rem; text-align: left; }
+th { background: var(--paper); }
+em { color: var(--muted); }
+
+form { max-width: 38rem; }
+.bar { max-width: none; }
+small.notice { color: var(--muted); font-weight: 400; }
+.row label { flex: 1; min-width: 10rem; }
