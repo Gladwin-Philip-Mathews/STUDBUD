@@ -184,6 +184,18 @@ class SqliteConnectionRepository(ConnectionRepository):
             "ORDER BY id", (a_id, b_id, b_id, a_id)).fetchall()
         return [self._row(r) for r in rows]
 
+    def find_open_between(self, a_id, b_id):
+        for c in self.between(a_id, b_id):
+            if c.is_open():
+                return c
+        return None
+
+    def last_decline_by(self, receiver_id, sender_id):
+        row = self.conn.execute(
+            "SELECT MAX(status_changed_at) AS at FROM connections WHERE status='declined' "
+            "AND requester_id=? AND receiver_id=?", (sender_id, receiver_id)).fetchone()
+        return _dt(row["at"]) if row and row["at"] else None
+
     def for_account(self, account_id):
         rows = self.conn.execute(
             "SELECT * FROM connections WHERE requester_id=? OR receiver_id=? ORDER BY id", (account_id, account_id)).fetchall()
