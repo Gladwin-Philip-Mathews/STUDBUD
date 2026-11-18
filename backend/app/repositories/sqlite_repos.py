@@ -33,15 +33,15 @@ class SqliteAccountRepository(AccountRepository):
             status=AccountStatus(r["status"]), role=Role(r["role"]), failed_sign_ins=r["failed_sign_ins"],
             first_failed_at=_dt(r["first_failed_at"]), locked_until=_dt(r["locked_until"]),
             last_sign_in_at=_dt(r["last_sign_in_at"]), email_notifications=bool(r["email_notifications"]),
-            created_at=_dt(r["created_at"]),
+            notice_accepted_at=_dt(r["notice_accepted_at"]), created_at=_dt(r["created_at"]),
         )
 
     def add(self, a: Account) -> Account:
         a.created_at = a.created_at or _now()
         a.email = a.email.strip().lower()
         cur = self.conn.execute(
-            "INSERT INTO accounts(email, display_name, password_hash, status, role, created_at) VALUES (?,?,?,?,?,?)",
-            (a.email, a.display_name, a.password_hash, a.status.value, a.role.value, _s(a.created_at)),
+            "INSERT INTO accounts(email, display_name, password_hash, status, role, notice_accepted_at, created_at) VALUES (?,?,?,?,?,?,?)",
+            (a.email, a.display_name, a.password_hash, a.status.value, a.role.value, _s(a.notice_accepted_at), _s(a.created_at)),
         )
         a.id = cur.lastrowid
         self.conn.commit()

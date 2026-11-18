@@ -15,7 +15,7 @@ describe('AuthService', () => {
 
   it('returns field errors from a rejected registration', () => {
     let result: any;
-    auth.register('a@x.com', 'Ana', 'pw').subscribe((r) => (result = r));
+    auth.register('a@x.com', 'Ana', 'pw', true).subscribe((r) => (result = r));
     http.expectOne('/api/auth/register').flush(
       { errors: { email: 'Only RIT email addresses are accepted.' } },
       { status: 400, statusText: 'Bad Request' }

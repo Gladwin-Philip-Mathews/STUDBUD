@@ -65,7 +65,7 @@ import { AdminService, CourseRow, DomainRow, PilotReport, SettingRow, Status } f
     <p><button type="button" (click)="loadReport()">Show report</button>
       <a href="/api/admin/pilot-report.csv" download>Download for Student Affairs (no names)</a></p>
     @if (report(); as r) {
-      <p>Pilot week {{ r.pilotWeek }}. Cohort groups under 5 students are combined.</p>
+      <p>Pilot week {{ r.pilotWeek }}, {{ r.period.from }} to {{ r.period.to }}, {{ r.records }} records used. Cohort groups under 5 students are combined.</p>
       <table>
         <tr><th>Cohort</th><th>Students</th><th>Requests</th><th>Accepted in 7 days</th><th>Reports</th><th>Acknowledged in 48 h</th><th>Upheld per 100 active</th></tr>
         @for (g of r.groups; track g.cohort) {

@@ -28,8 +28,8 @@ export class AuthService {
   /** FR-010: false until intent and cohort are saved. The backend decides; this only steers the page. */
   readonly profileComplete = signal(false);
 
-  register(email: string, displayName: string, password: string): Observable<ApiResult> {
-    return this.http.post<{ message: string }>('/api/auth/register', { email, displayName, password }).pipe(
+  register(email: string, displayName: string, password: string, acceptNotice = false): Observable<ApiResult> {
+    return this.http.post<{ message: string }>('/api/auth/register', { email, displayName, password, acceptNotice }).pipe(
       map((r) => ({ ok: true, message: r.message })),
       catchError((e: HttpErrorResponse) => of(toResult(e)))
     );

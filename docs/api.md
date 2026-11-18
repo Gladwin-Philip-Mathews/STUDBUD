@@ -5,7 +5,7 @@ All endpoints are under `/api` and return JSON. Sessions use a signed cookie; th
 ## Auth (process 1.0)
 | Method and path | Body | Result |
 |---|---|---|
-| POST `/api/auth/register` | email, displayName, password | 202 same message for new and existing addresses (FR-004); 400 with `errors` per field (FR-002, FR-003) |
+| POST `/api/auth/register` | email, displayName, password, acceptNotice (must be true, OR-003) | 202 same message for new and existing addresses (FR-004); 400 with `errors` per field (FR-002, FR-003) |
 | POST `/api/auth/verify` | token | 200 verified; 400 invalid, expired or used (FR-005, FR-006) |
 | POST `/api/auth/resend` | email | 202; 429 after 3 per hour (FR-006) |
 | POST `/api/auth/sign-in` | email, password | 200 and session; 401 one message for wrong email or password (FR-008); 403 unverified (FR-007) or suspended; 429 locked (FR-009) |

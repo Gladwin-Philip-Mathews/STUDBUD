@@ -25,6 +25,8 @@ def init_db(conn: sqlite3.Connection) -> None:
     for column, kind in (("added_at", "TEXT"), ("added_by", "INTEGER")):
         if column not in columns:
             conn.execute(f"ALTER TABLE accepted_domains ADD COLUMN {column} {kind}")
+    if "notice_accepted_at" not in {r["name"] for r in conn.execute("PRAGMA table_info(accounts)")}:
+        conn.execute("ALTER TABLE accounts ADD COLUMN notice_accepted_at TEXT")  # OR-003
     for d in DEFAULT_DOMAINS:
         conn.execute("INSERT OR IGNORE INTO accepted_domains(domain) VALUES (?)", (d,))
     conn.commit()
