@@ -1,10 +1,11 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { ReportForm } from '../moderation/report-form';
 import { ChatMessage, ConversationSummary, MessagingService } from './messaging.service';
 
 @Component({
   selector: 'app-messaging-home',
-  imports: [FormsModule],
+  imports: [FormsModule, ReportForm],
   template: `
     <h2>Messages</h2>
     <div class="layout">
@@ -21,6 +22,7 @@ import { ChatMessage, ConversationSummary, MessagingService } from './messaging.
             <p class="msg" [class.mine]="m.mine"><strong>{{ m.mine ? 'You' : currentName() }}:</strong> {{ m.text }}
               <small>{{ m.sentAt.slice(11, 16) }}</small>
               @if (m.notice) { <small class="notice">{{ m.notice }}</small> }
+              @if (!m.mine) { <app-report-form itemType="message" [itemId]="m.id" /> }
             </p>
           } @empty { <p>No messages yet. Say hello.</p> }
           <form (ngSubmit)="send()">
