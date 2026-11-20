@@ -117,3 +117,15 @@ Not changed, because the difference is in the figure rather than the code: `Acco
 missing from CD-1a), the DFD-0 "decline wait" arrow drawn into 3.0 instead of 4.0, the missing D1 to 8.0 flow for active
 users, and the process that owns the OR-002 clean-up. These are listed in `docs/diagram-conformance.md` for the M3
 change record (CH-16 onward).
+
+## 7. After this review (20 November, evening)
+
+Changes made after the review above, so that this file stays accurate:
+
+- FR-026 (student-proposed interest communities, deferred in M2) is now partly built: a student can suggest an interest
+  and only the administrator creates the community. Section 3's line "FR-026 absent" is therefore out of date; see
+  `docs/deferred-requirements.md`.
+- A moderator can open the reported post, its thread and the earlier reports about the student from the queue
+  (FR-064); notifications saved before items were stored open the page for their event.
+- The interface was redesigned (community names on posts, chat panel, side sections, avatars). Counts are now 180
+  backend and 32 frontend tests.

@@ -44,7 +44,7 @@ backend/
   app/email_gateway/   EmailGateway (stub and live)
   tests/
 frontend/              Angular app (screens call the /api endpoints)
-docs/                  SRS, M3 design, diagrams
+docs/                  requirements coverage, traceability, API, test report, review notes
 ```
 
 ## Adding your feature
