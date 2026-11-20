@@ -1,6 +1,6 @@
 # Test report
 
-Results of the final run on `main` before submission (18 November 2026, after the final changes).
+Results of the final run on `main` before submission (20 November 2026, after the review fixes, the interface changes and the moderator context view).
 
 | Suite | Tool | Tests | Result |
 |---|---|---|---|
@@ -16,9 +16,9 @@ Run them with `pytest` in `backend` and `npm test` in `frontend`.
 |---|---|---|
 | `test_auth_api.py` | 19 | registration with the conduct notice, verification link, resend limit, sign-in, lockout, session idle expiry |
 | `test_connections_api.py` | 22 | requests, accept and decline, wait after decline, suggestions, withdraw and remove, notifications |
-| `test_communities.py` | 15 | course and interest communities, posts, replies, edit window, hiding, search |
-| `test_moderation.py` | 19 | reports, queue, acknowledgement, decisions, actions, append-only log, role checks |
-| `test_admin.py` | 11 | courses, CSV import, domains, communities, moderators, settings, status |
+| `test_communities.py` | 16 | course and interest communities, posts naming their community, replies, edit window, hiding, search |
+| `test_moderation.py` | 21 | reports, queue, acknowledgement, decisions, actions, append-only log, role checks, post thread and history for a moderator |
+| `test_admin.py` | 13 | courses, CSV import, domains, communities, interest suggestions, moderators, settings, status |
 | `test_pilot.py` | 11 | onboarding question, report figures (hand-calculated), small-group merge, CSV without names |
 | `test_messaging.py` | 8 | messages between accepted connections, limits, unread counts, retention |
 | `test_profiles.py` | 8 | profile rules, public view, account deletion |
@@ -32,7 +32,7 @@ Run them with `pytest` in `backend` and `npm test` in `frontend`.
 
 - Live email through the RIT mail server (IF-003): only the stub gateway is tested.
 - Angular components are checked through their services and by hand; there are no browser end-to-end tests.
-- Response-time targets were not measured under load.
+- Response-time targets were not measured under load. Only a post search over 10,000 posts was timed by hand (about 10 ms, NFR-005).
 - The retention clean-up is tested (`test_review_fixes.py`, 20 November) and runs on demand (`POST /api/admin/clean-up` or `flask --app app clean-up`); the daily schedule itself is a host job and is not in the code.
 
 See `docs/requirements-coverage.md` for the per-requirement view.

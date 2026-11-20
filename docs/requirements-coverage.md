@@ -180,4 +180,5 @@ These requirements shape the product rather than one function. Each is checked h
 | NFR-022 | Met | First load is about 96 kB transferred (350 kB raw), far under 1.5 MB; no third-party fonts, scripts or images. |
 | NFR-023 | Met | Nothing requires a connection request or message; a student can leave (FR-015) and switch email off (FR-082). |
 | OR-004 | Process | The invited-student list is kept by the team before the first registration. |
-| FR-016, FR-026, FR-049 | Deferred | See `docs/deferred-requirements.md`. |
+| FR-016, FR-049 | Deferred | See `docs/deferred-requirements.md`. |
+| FR-026 | Partly built | A student can suggest an interest; only the administrator creates the community. See `docs/deferred-requirements.md`. |
