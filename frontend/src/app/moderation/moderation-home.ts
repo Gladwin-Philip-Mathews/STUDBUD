@@ -1,7 +1,7 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Section, Sections } from '../shared/sections';
-import { ACTIONS, DECISIONS, ModerationService, QueueReport } from './moderation.service';
+import { ACTIONS, DECISIONS, ModerationService, QueueReport, ReportContext } from './moderation.service';
 
 @Component({
   selector: 'app-moderation-home',
@@ -24,6 +24,38 @@ import { ACTIONS, DECISIONS, ModerationService, QueueReport } from './moderation
                 {{ r.item?.text }} <small>({{ r.itemType }}, {{ r.item?.status }})</small>
               </blockquote>
             } @else { <p>Reported item: {{ r.itemType }}</p> }
+
+            <p>
+              <button type="button" class="btn-small view-context" [attr.aria-expanded]="!!contexts()[r.id]" (click)="toggleContext(r)">
+                {{ contexts()[r.id] ? 'Hide post and history' : (r.itemType === 'message' ? 'View history' : 'View post and history') }}
+              </button>
+            </p>
+            @if (contexts()[r.id]; as c) {
+              <section class="context" aria-label="Post and history for report {{ r.id }}">
+                @if (c.thread; as t) {
+                  <h4>Post in {{ t.post.community }}</h4>
+                  <div class="ctx-post" [class.flagged]="t.post.reported">
+                    <p><strong>{{ t.post.title }}</strong> <span class="kind">{{ t.post.kind }}</span> @if (t.post.status !== 'visible') { <span class="flag">{{ t.post.status }}</span> }@if (t.post.reported) { <span class="flag">REPORTED</span> }</p>
+                    <p><small>{{ t.post.author }} · {{ t.post.createdAt.slice(0, 16).replace('T', ' ') }}@if (t.post.edited) { · edited }</small></p>
+                    <p class="body">{{ t.post.text }}</p>
+                  </div>
+                  <h4>Replies ({{ t.replies.length }})</h4>
+                  @for (x of t.replies; track x.id) {
+                    <div class="ctx-reply" [class.flagged]="x.reported">
+                      <small><strong>{{ x.author }}</strong> · {{ x.createdAt.slice(0, 16).replace('T', ' ') }}@if (x.edited) { · edited }@if (x.status !== 'visible') { · {{ x.status }} }@if (x.reported) { · <span class="flag">REPORTED</span> }</small>
+                      <p class="body">{{ x.text }}</p>
+                    </div>
+                  } @empty { <p><em>No replies.</em></p> }
+                } @else if (r.itemType === 'message') {
+                  <p><em>Only the reported message is shown. The rest of the conversation stays private.</em></p>
+                }
+                <h4>Earlier reports about {{ c.reportedStudent }}</h4>
+                @for (h of c.history; track h.id) {
+                  <p class="hist">#{{ h.id }} {{ h.reason }} · {{ h.itemType }} · {{ h.receivedAt.slice(0, 10) }} ·
+                    @if (h.decision) { <strong>{{ h.decision }}</strong>, action {{ h.action }} } @else { still open }</p>
+                } @empty { <p><em>No earlier reports.</em></p> }
+              </section>
+            }
 
             @if (!r.acknowledgedAt) {
               <button type="button" class="ack" (click)="acknowledge(r)">Acknowledge</button>
@@ -78,7 +110,7 @@ import { ACTIONS, DECISIONS, ModerationService, QueueReport } from './moderation
       }
     </app-sections>
   `,
-  styles: `.overdue { border-left: 4px solid #b00020; } .flag { color: #b00020; font-size: .8em; } blockquote { margin: .5rem 0; padding: .6rem .9rem; background: var(--paper); border-left: 4px solid var(--line-strong); border-radius: 8px; } pre { white-space: pre-wrap; background: var(--paper); padding: .75rem; border-radius: 8px; } form { max-width: none; }`,
+  styles: `.context { background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: .75rem 1rem; margin: .5rem 0 1rem; } .context h4 { margin: .75rem 0 .4rem; } .ctx-post, .ctx-reply { background: var(--white); border: 1px solid var(--line); border-radius: 10px; padding: .5rem .8rem; margin: .4rem 0; } .flagged { border-left: 4px solid #b00020; } .body { white-space: pre-wrap; margin: .2rem 0; } .hist { margin: .25rem 0; } .overdue { border-left: 4px solid #b00020; } .flag { color: #b00020; font-size: .8em; } blockquote { margin: .5rem 0; padding: .6rem .9rem; background: var(--paper); border-left: 4px solid var(--line-strong); border-radius: 8px; } pre { white-space: pre-wrap; background: var(--paper); padding: .75rem; border-radius: 8px; } form { max-width: none; }`,
 })
 export class ModerationHome implements OnInit {
   private readonly api = inject(ModerationService);
@@ -89,6 +121,7 @@ export class ModerationHome implements OnInit {
   readonly summary = signal('');
   readonly summaryError = signal('');
   readonly notice = signal('');
+  readonly contexts = signal<Record<number, ReportContext>>({});
   readonly section = signal('queue');
   readonly sectionList = computed<Section[]>(() => [
     { id: 'queue', label: 'Open reports', count: this.reports().length },
@@ -110,6 +143,14 @@ export class ModerationHome implements OnInit {
   }
   form(r: QueueReport) {
     return (this.forms[r.id] ??= { decision: '', action: '', note: '', escalate: false });
+  }
+  /** Open or close the reported post, its thread and the student's earlier reports. */
+  toggleContext(r: QueueReport): void {
+    if (this.contexts()[r.id]) {
+      this.contexts.update((c) => { const { [r.id]: _gone, ...rest } = c; return rest; });
+      return;
+    }
+    this.api.context(r.id).subscribe((c) => { if (c) this.contexts.update((all) => ({ ...all, [r.id]: c })); });
   }
   acknowledge(r: QueueReport): void {
     this.api.acknowledge(r.id).subscribe(() => this.load());

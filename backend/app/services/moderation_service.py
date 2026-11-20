@@ -129,6 +129,46 @@ class ModerationService:
         a = self.accounts.get(account_id)
         return a.display_name if a else "deleted student"
 
+    def report_context(self, moderator_id: int, report_id: int) -> ModResult:
+        """What a moderator needs to investigate before acknowledging or deciding (FR-064): the reported post with its
+        community, author and time, the whole thread when a post or reply is reported (hidden and deleted content stays
+        visible to a moderator, FR-033), and the earlier reports about the same student with their outcomes. For a
+        message only the reported message is shown, never the rest of the conversation (FR-054, AC-FR-070a)."""
+        report = self.reports.get(report_id)
+        if report is None:
+            return ModResult(not_found=True)
+        post = None
+        reply_id = None
+        if report.item_type == "post":
+            post = self.posts.get_post(report.item_id)
+        elif report.item_type == "reply":
+            reply = self.posts.get_reply(report.item_id)
+            post = self.posts.get_post(reply.post_id) if reply else None
+            reply_id = reply.id if reply else None
+        thread = None
+        if post is not None:
+            community = self.communities.get(post.community_id)
+            thread = {
+                "post": {"id": post.id, "community": community.name if community else "", "kind": post.kind,
+                         "title": post.title, "text": post.body, "status": post.status,
+                         "author": self._name(post.author_id), "createdAt": post.created_at,
+                         "edited": post.edited_at is not None, "reported": report.item_type == "post"},
+                "replies": [{"id": r.id, "author": self._name(r.author_id), "text": r.body, "status": r.status,
+                             "createdAt": r.created_at, "edited": r.edited_at is not None, "reported": r.id == reply_id}
+                            for r in self.posts.replies_for(post.id, include_deleted=True)],
+            }
+        history = []
+        for other in self.reports.find_about_student(report.reported_student_id):
+            if other.id == report.id:
+                continue
+            outcome = self.reports.get_outcome(other.id)
+            history.append({"id": other.id, "reason": other.reason, "itemType": other.item_type,
+                            "receivedAt": other.received_at, "status": other.status,
+                            "decision": outcome.decision if outcome else None,
+                            "action": outcome.action if outcome else None})
+        return ModResult(item={"reportId": report.id, "reportedStudent": self._name(report.reported_student_id),
+                               "thread": thread, "history": history})
+
     # ---- 6.3 Record acknowledgement (FR-063) ----
     def acknowledge(self, moderator_id: int, report_id: int) -> ModResult:
         report = self.reports.get(report_id)

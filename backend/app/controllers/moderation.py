@@ -41,6 +41,26 @@ def queue():
     return jsonify({"reports": [_queue_json(q) for q in _svc().open_queue(g.account.id)]})
 
 
+def _iso(value):
+    return value.isoformat() if hasattr(value, "isoformat") else value
+
+
+@bp.get("/moderation/reports/<int:report_id>/context")
+@page_required("moderation")
+def context(report_id):
+    result = _svc().report_context(g.account.id, report_id)
+    if not result.ok:
+        return _failed(result)
+    c = result.item
+    thread = c["thread"]
+    if thread:
+        thread = {"post": {**thread["post"], "createdAt": _iso(thread["post"]["createdAt"])},
+                  "replies": [{**r, "createdAt": _iso(r["createdAt"])} for r in thread["replies"]]}
+    history = [{**h, "receivedAt": _iso(h["receivedAt"])} for h in c["history"]]
+    return jsonify({"context": {"reportId": c["reportId"], "reportedStudent": c["reportedStudent"],
+                                "thread": thread, "history": history}})
+
+
 @bp.post("/moderation/reports/<int:report_id>/acknowledge")
 @page_required("moderation")
 def acknowledge(report_id):

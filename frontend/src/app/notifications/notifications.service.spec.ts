@@ -31,8 +31,15 @@ describe('NotificationsService', () => {
     expect(api.linkFor({ ...base, item: { type: 'post', id: 12 } })).toEqual(['/communities', 'post', '12']);
     expect(api.linkFor({ ...base, item: { type: 'connection', id: 5 } })).toEqual(['/connections']);
     expect(api.linkFor({ ...base, item: { type: 'conversation', id: 5 } })).toEqual(['/messaging']);
-    expect(api.linkFor({ ...base, item: { type: 'report', id: 2 } })).toBeNull(); // a reporter has no report page
-    expect(api.linkFor({ ...base, item: null })).toBeNull();
+    expect(api.linkFor({ ...base, event: 'REPORT_CLOSED', item: { type: 'report', id: 2 } })).toBeNull(); // a reporter has no report page
+    expect(api.linkFor({ ...base, event: 'REPORT_CLOSED', item: null })).toBeNull();
+  });
+
+  it('still opens a page for older notifications that have no item', () => {
+    const old = { id: 1, body: 'x', createdAt: 't', read: false, item: null };
+    expect(api.linkFor({ ...old, event: 'MESSAGE_RECEIVED' })).toEqual(['/messaging']);
+    expect(api.linkFor({ ...old, event: 'REQUEST_RECEIVED' })).toEqual(['/connections']);
+    expect(api.linkFor({ ...old, event: 'REPLY_ADDED' })).toEqual(['/communities']);
   });
 
   it('shows 0 when the backend cannot be reached', () => {

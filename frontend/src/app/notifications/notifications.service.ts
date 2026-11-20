@@ -35,6 +35,14 @@ export class NotificationsService {
       case 'post': return ['/communities', 'post', String(n.item.id)];
       case 'connection': return ['/connections'];
       case 'conversation': return ['/messaging'];
+      default: break;
+    }
+    // Notifications made before the item was stored have no item; the event still says where to go.
+    switch (n.event) {
+      case 'REPLY_ADDED': return ['/communities'];
+      case 'REQUEST_RECEIVED':
+      case 'REQUEST_ANSWERED': return ['/connections'];
+      case 'MESSAGE_RECEIVED': return ['/messaging'];
       default: return null;
     }
   }

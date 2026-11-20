@@ -20,6 +20,16 @@ export interface QueueReport {
   item: { type: string; title?: string; text?: string; status?: string } | null;
   acknowledgedAt: string | null;
 }
+export interface ThreadReply { id: number; author: string; text: string; status: string; createdAt: string; edited: boolean; reported: boolean }
+export interface ReportContext {
+  reportId: number;
+  reportedStudent: string;
+  thread: {
+    post: { id: number; community: string; kind: string; title: string; text: string; status: string; author: string; createdAt: string; edited: boolean; reported: boolean };
+    replies: ThreadReply[];
+  } | null;
+  history: { id: number; reason: string; itemType: string; receivedAt: string; status: string; decision: string | null; action: string | null }[];
+}
 export interface Outcome {
   ok: boolean;
   message?: string;
@@ -34,6 +44,14 @@ function failed(e: HttpErrorResponse): Outcome {
 @Injectable({ providedIn: 'root' })
 export class ModerationService {
   private readonly http = inject(HttpClient);
+
+  /** The reported post with its thread and the student's earlier reports, for a moderator (FR-064). */
+  context(reportId: number): Observable<ReportContext | null> {
+    return this.http.get<{ context: ReportContext }>(`/api/moderation/reports/${reportId}/context`).pipe(
+      map((r) => r.context),
+      catchError(() => of(null))
+    );
+  }
 
   /** A student reports a student, post, reply or message (FR-060). */
   report(itemType: string, itemId: number, reason: string, text: string): Observable<Outcome> {
