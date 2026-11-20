@@ -51,6 +51,10 @@ Emails are handed over after the response is sent (DD-04). A returned email is r
 email choice of FR-082 is part of the profile details); `DELETE /api/profile` with the password deletes the account (FR-015).
 
 ## Administration (process 9.0) — administrator role only
+Students suggest an interest community with `POST /api/communities/suggestions` (`name`); the administrator lists them at
+`GET /api/admin/interest-suggestions` and answers with `POST /api/admin/interest-suggestions/{id}/create` or `.../dismiss`.
+Every post carries `community` (its community's name), and `GET /api/communities/{id}/posts` returns `community {id, name}`.
+
 Courses, accepted domains, interest communities, moderators, settings and the pilot report are under `/api/admin`
 (see `backend/app/controllers/admin.py`). Added by the 20 November review:
 

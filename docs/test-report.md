@@ -4,8 +4,8 @@ Results of the final run on `main` before submission (18 November 2026, after th
 
 | Suite | Tool | Tests | Result |
 |---|---|---|---|
-| Backend (Flask API, services, repositories) | pytest | 175 | all passed (146 before the 20 November review; 15 added by the SRS pass, 14 by the diagram alignment) |
-| Frontend (Angular services, routes, app shell) | Karma and Jasmine, headless Chrome | 28 | all passed |
+| Backend (Flask API, services, repositories) | pytest | 178 | all passed (146 before the 20 November review; 15 added by the SRS pass, 14 by the diagram alignment, 3 by the interest suggestions and community names) |
+| Frontend (Angular services, routes, app shell) | Karma and Jasmine, headless Chrome | 30 | all passed |
 | Production build | `ng build` | n/a | succeeds |
 
 Run them with `pytest` in `backend` and `npm test` in `frontend`.

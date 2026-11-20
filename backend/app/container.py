@@ -21,7 +21,7 @@ from .repositories import (
     SqliteAccountRepository, SqliteConnectionRepository, SqliteCourseRepository, SqliteNotificationRepository,
     SqliteProfileRepository, SqliteVerificationTokenRepository,
     SqliteCommunityRepository, SqlitePostRepository, SqliteMessageRepository, SqliteReportRepository,
-    SqliteDomainRepository, SqliteStatsRepository, SqliteOnboardingRepository, SqlitePilotDataRepository,
+    SqliteDomainRepository, SqliteSuggestionRepository, SqliteStatsRepository, SqliteOnboardingRepository, SqlitePilotDataRepository,
 )
 from .settings import SettingsProvider
 
@@ -82,6 +82,7 @@ def get_deps():
             messages=SqliteMessageRepository(db),
             reports=SqliteReportRepository(db),
             domains=SqliteDomainRepository(db),
+            suggestions=SqliteSuggestionRepository(db),
             stats=SqliteStatsRepository(db),
             onboarding=SqliteOnboardingRepository(db),
             pilot_data=SqlitePilotDataRepository(db),

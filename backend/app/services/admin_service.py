@@ -18,6 +18,7 @@ DOMAIN = re.compile(r"^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-
 CODE = re.compile(r"^[A-Z0-9][A-Z0-9 -]{1,19}$")
 SETTING_RANGE = (1, 10000)
 ACTIVE_DAYS = 7  # FR-103
+MAX_OPEN_SUGGESTIONS = 5  # keeps the administrator's list short
 
 
 def utc_now() -> datetime:
@@ -44,8 +45,9 @@ class ImportResult:
 
 class AdminService:
     def __init__(self, accounts, courses, domains, stats, settings, audit, communities,
-                 clock: Callable[[], datetime] = utc_now):
+                 clock: Callable[[], datetime] = utc_now, suggestions=None):
         self.accounts, self.courses, self.domains, self.stats = accounts, courses, domains, stats
+        self.suggestions = suggestions
         self.settings, self.audit, self.communities, self.clock = settings, audit, communities, clock
 
     # ---- courses (FR-100, FR-020) ----
@@ -141,6 +143,45 @@ class AdminService:
             self.audit.record(admin_id, "COMMUNITY_CREATED", made.item.name)
         return AdminResult(item=made.item, errors=made.errors)
 
+    # ---- interest suggestions (FR-102: the administrator keeps the interest communities) ----
+    def suggest_interest(self, account_id: int, name) -> AdminResult:
+        """A student asks for a community that is not on the list. Nothing is created until an administrator agrees."""
+        name = " ".join((name or "").split())
+        if not 3 <= len(name) <= 50:
+            return AdminResult(errors={"name": "The name is 3 to 50 characters."})
+        if self.communities.communities.name_taken(name):
+            return AdminResult(errors={"name": "This community already exists. Find it under Communities."})
+        if self.suggestions.open_named(name):
+            return AdminResult(errors={"name": "Someone has already suggested this. The administrator will see it."})
+        if self.suggestions.open_count_for(account_id) >= MAX_OPEN_SUGGESTIONS:
+            return AdminResult(errors={"name": f"You have {MAX_OPEN_SUGGESTIONS} suggestions waiting. Try again once the administrator has answered."})
+        new_id = self.suggestions.add(name, account_id, self.clock())
+        return AdminResult(item=self.suggestions.get(new_id))
+
+    def list_suggestions(self) -> list:
+        out = []
+        for s in self.suggestions.open_list():
+            a = self.accounts.get(s["suggestedBy"]) if s["suggestedBy"] else None
+            out.append({**s, "suggestedByName": a.display_name if a else "deleted student"})
+        return out
+
+    def create_from_suggestion(self, admin_id: int, suggestion_id: int) -> AdminResult:
+        s = self.suggestions.get(suggestion_id)
+        if s is None or s["status"] != "open":
+            return AdminResult(not_found=True)
+        made = self.create_interest_community(admin_id, s["name"])
+        if made.ok:
+            self.suggestions.set_status(suggestion_id, "created")
+        return made
+
+    def dismiss_suggestion(self, admin_id: int, suggestion_id: int) -> AdminResult:
+        s = self.suggestions.get(suggestion_id)
+        if s is None or s["status"] != "open":
+            return AdminResult(not_found=True)
+        self.suggestions.set_status(suggestion_id, "dismissed")
+        self.audit.record(admin_id, "SUGGESTION_DISMISSED", s["name"])
+        return AdminResult()
+
     def rename_community(self, admin_id: int, community_id: int, name) -> AdminResult:
         repo = self.communities.communities
         community = repo.get(community_id)
@@ -201,4 +242,4 @@ def build_admin_service(d):
     from ..container import get_service
     kwargs = {"clock": d.clock} if d.clock else {}
     return AdminService(d.accounts, d.courses, d.domains, d.stats, d.settings, get_service("audit"),
-                        get_service("communities"), **kwargs)
+                        get_service("communities"), suggestions=d.suggestions, **kwargs)

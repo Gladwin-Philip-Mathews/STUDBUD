@@ -5,19 +5,22 @@ import { AppNotification, NotificationsService } from './notifications.service';
 @Component({
   selector: 'app-notifications-page',
   template: `
-    <h2>Notifications</h2>
-    <p>
+    <div class="page-head">
+      <h2>Notifications</h2>
+      <p class="lead">Replies, requests and messages for you. Open one to go to it.</p>
+    </div>
+    <div class="actions">
       <button type="button" id="read-all" (click)="readAll()">Mark all as read</button>
-      <label><input type="checkbox" [checked]="emailOn()" (change)="toggleEmail($event)" /> Email me too</label>
-    </p>
+      <label class="check"><input type="checkbox" [checked]="emailOn()" (change)="toggleEmail($event)" /> Email me too</label>
+    </div>
     @for (n of items(); track n.id) {
       <div class="item" [class.unread]="!n.read">
         <button type="button" class="link" (click)="open(n)">{{ n.body }}</button>
-        <small>{{ n.createdAt }}</small>
+        <small>{{ n.createdAt.slice(0, 16).replace('T', ' ') }}</small>
       </div>
-    } @empty { <p>Nothing yet.</p> }
+    } @empty { <p class="empty">Nothing yet.</p> }
   `,
-  styles: `.item { background: var(--white); border: 1px solid var(--line); border-radius: 10px; padding: .6rem .9rem; margin: .45rem 0; } .item.unread { border-left: 4px solid var(--orange); } .unread { font-weight: 600; } .link { background: none; border: 0; text-align: left; padding: 0; font: inherit; cursor: pointer; } small { display: block; }`,
+  styles: `.item { display: flex; justify-content: space-between; gap: 1rem; align-items: center; background: var(--white); border: 1px solid var(--line); border-radius: 12px; padding: .65rem 1rem; margin: .5rem 0; box-shadow: var(--shadow-sm); } .item.unread { border-left: 4px solid var(--orange); background: var(--orange-tint); } .unread .link { font-weight: 700; } .link { text-align: left; color: var(--ink); text-decoration: none; padding: 0; } .link:hover { color: var(--orange-ink); text-decoration: underline; } .actions { margin: 0 0 .75rem; }`,
 })
 export class NotificationsPage implements OnInit {
   private readonly api = inject(NotificationsService);

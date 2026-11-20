@@ -5,6 +5,7 @@ import { Observable, catchError, map, of } from 'rxjs';
 export interface CourseRow { code: string; title: string; status: string }
 export interface DomainRow { domain: string; addedAt: string | null }
 export interface SettingRow { name: string; value: number; unit: string }
+export interface SuggestionRow { id: number; name: string; suggestedByName: string; suggestedAt: string }
 export interface Status { accounts: number; activeUsers: number; posts: number; openReports: number; failedEmails: number }
 export interface GroupRow {
   cohort: string;
@@ -69,6 +70,15 @@ export class AdminService {
   }
   createCommunity(name: string): Observable<Done> {
     return this.post('/api/admin/communities', { name });
+  }
+  suggestions(): Observable<SuggestionRow[]> {
+    return this.http.get<{ suggestions: SuggestionRow[] }>('/api/admin/interest-suggestions').pipe(map((r) => r.suggestions));
+  }
+  createFromSuggestion(id: number): Observable<Done> {
+    return this.post(`/api/admin/interest-suggestions/${id}/create`);
+  }
+  dismissSuggestion(id: number): Observable<Done> {
+    return this.post(`/api/admin/interest-suggestions/${id}/dismiss`);
   }
   setModerator(email: string, enable: boolean): Observable<Done> {
     return this.post('/api/admin/moderators', { email, enable });

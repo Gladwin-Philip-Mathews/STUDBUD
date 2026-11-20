@@ -34,4 +34,13 @@ describe('CommunitiesService', () => {
     http.expectOne((r) => r.url === '/api/search').flush({ message: 'Enter at least 2 characters.' }, { status: 400, statusText: 'Bad Request' });
     expect(message).toContain('2 characters');
   });
+
+  it('sends an interest suggestion and returns the refusal when the name already exists', () => {
+    let errors: Record<string, string> | undefined;
+    svc.suggestInterest('Movies').subscribe((r) => (errors = r.errors));
+    const req = http.expectOne('/api/communities/suggestions');
+    expect(req.request.body).toEqual({ name: 'Movies' });
+    req.flush({ errors: { name: 'This community already exists. Find it under Communities.' } }, { status: 400, statusText: 'Bad Request' });
+    expect(errors?.['name']).toContain('already exists');
+  });
 });

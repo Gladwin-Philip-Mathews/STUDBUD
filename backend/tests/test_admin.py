@@ -138,3 +138,31 @@ def test_system_status_counts_match_the_data(people, app, clock):  # AC-FR-103a
     status = cl["Root"].get("/api/admin/status").get_json()["status"]
     assert status["accounts"] == 3 and status["posts"] == 1 and status["openReports"] == 1 and status["failedEmails"] == 1
     assert status["activeUsers"] >= 0
+
+
+def test_a_student_suggests_an_interest_and_the_administrator_decides(people):  # FR-102
+    ids, cl = people
+    r = cl["Stu"].post("/api/communities/suggestions", json={"name": "Movies"})
+    assert r.status_code == 201
+    assert cl["Stu"].post("/api/communities/suggestions", json={"name": "movies"}).status_code == 400  # already suggested
+    assert cl["Stu"].post("/api/communities/suggestions", json={"name": "ab"}).status_code == 400  # too short
+    assert cl["Stu"].get("/api/admin/interest-suggestions").status_code == 403  # students cannot read the list
+    listed = cl["Root"].get("/api/admin/interest-suggestions").get_json()["suggestions"]
+    assert [s["name"] for s in listed] == ["Movies"] and listed[0]["suggestedByName"] == "Stu"
+    made = cl["Root"].post(f"/api/admin/interest-suggestions/{listed[0]['id']}/create")
+    assert made.status_code == 201
+    names = [c["name"] for c in cl["Stu"].get("/api/communities").get_json()["communities"]]
+    assert "Movies" in names
+    assert cl["Root"].get("/api/admin/interest-suggestions").get_json()["suggestions"] == []
+    assert cl["Stu"].post("/api/communities/suggestions", json={"name": "Movies"}).status_code == 400  # exists now
+
+
+def test_suggestions_can_be_dismissed_and_are_limited(people):
+    ids, cl = people
+    for n in range(5):
+        assert cl["Stu"].post("/api/communities/suggestions", json={"name": f"Topic {n}x"}).status_code == 201
+    assert cl["Stu"].post("/api/communities/suggestions", json={"name": "One more"}).status_code == 400
+    first = cl["Root"].get("/api/admin/interest-suggestions").get_json()["suggestions"][0]["id"]
+    assert cl["Root"].post(f"/api/admin/interest-suggestions/{first}/dismiss").status_code == 200
+    assert cl["Root"].post(f"/api/admin/interest-suggestions/{first}/dismiss").status_code == 404
+    assert cl["Stu"].post("/api/communities/suggestions", json={"name": "One more"}).status_code == 201

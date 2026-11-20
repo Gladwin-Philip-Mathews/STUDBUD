@@ -2,7 +2,7 @@
   <div class="inner">
     <h1 class="brand"><a routerLink="/">Stud<span>Bud</span></a></h1>
     @if (auth.account(); as a) {
-      <span class="who">{{ a.displayName }}</span>
+      <span class="who"><app-avatar [name]="a.displayName" [size]="2" /> <span>{{ a.displayName }}</span></span>
       <button type="button" id="sign-out" (click)="signOut()">Sign out</button>
     }
   </div>

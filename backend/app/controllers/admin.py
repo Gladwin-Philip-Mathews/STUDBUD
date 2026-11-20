@@ -100,6 +100,26 @@ def create_community():
     return (jsonify({"community": {"id": r.item.id, "name": r.item.name}}), 201) if r.ok else _failed(r)
 
 
+@bp.get("/interest-suggestions")
+@page_required("admin")
+def interest_suggestions():
+    return jsonify({"suggestions": _svc().list_suggestions()})
+
+
+@bp.post("/interest-suggestions/<int:suggestion_id>/create")
+@page_required("admin")
+def create_from_suggestion(suggestion_id):
+    r = _svc().create_from_suggestion(g.account.id, suggestion_id)
+    return (jsonify({"community": {"id": r.item.id, "name": r.item.name}}), 201) if r.ok else _failed(r)
+
+
+@bp.post("/interest-suggestions/<int:suggestion_id>/dismiss")
+@page_required("admin")
+def dismiss_suggestion(suggestion_id):
+    r = _svc().dismiss_suggestion(g.account.id, suggestion_id)
+    return (jsonify({"message": "Dismissed."}), 200) if r.ok else _failed(r)
+
+
 @bp.put("/communities/<int:community_id>")
 @page_required("admin")
 def rename_community(community_id):

@@ -26,4 +26,13 @@ describe('AdminService', () => {
     expect(req.request.body).toEqual({ value: 24 });
     req.flush({ settings: [] });
   });
+
+  it('lists the suggestions and creates a community from one', () => {
+    let names: string[] = [];
+    svc.suggestions().subscribe((r) => (names = r.map((x) => x.name)));
+    http.expectOne('/api/admin/interest-suggestions').flush({ suggestions: [{ id: 3, name: 'Movies', suggestedByName: 'Omar', suggestedAt: '' }] });
+    expect(names).toEqual(['Movies']);
+    svc.createFromSuggestion(3).subscribe();
+    http.expectOne('/api/admin/interest-suggestions/3/create').flush({ community: { id: 9, name: 'Movies' } }, { status: 201, statusText: 'Created' });
+  });
 });

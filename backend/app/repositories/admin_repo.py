@@ -25,6 +25,21 @@ class DomainRepository(ABC):
     def exists(self, domain: str) -> bool: ...
 
 
+class SuggestionRepository(ABC):
+    @abstractmethod
+    def add(self, name: str, account_id: int, at) -> int: ...
+    @abstractmethod
+    def get(self, suggestion_id: int): ...
+    @abstractmethod
+    def open_list(self) -> list: ...
+    @abstractmethod
+    def open_count_for(self, account_id: int) -> int: ...
+    @abstractmethod
+    def open_named(self, name: str) -> bool: ...
+    @abstractmethod
+    def set_status(self, suggestion_id: int, status: str) -> None: ...
+
+
 class StatsRepository(ABC):
     @abstractmethod
     def status_counts(self, active_since) -> dict:
@@ -79,6 +94,42 @@ class SqliteDomainRepository(DomainRepository):
 
     def exists(self, domain):
         return self.conn.execute("SELECT 1 FROM accepted_domains WHERE domain=?", (domain,)).fetchone() is not None
+
+
+class SqliteSuggestionRepository(SuggestionRepository):
+    def __init__(self, conn):
+        self.conn = conn
+
+    @staticmethod
+    def _row(r):
+        return {"id": r["id"], "name": r["name"], "suggestedBy": r["suggested_by"], "suggestedAt": r["suggested_at"],
+                "status": r["status"]}
+
+    def add(self, name, account_id, at):
+        cur = self.conn.execute("INSERT INTO interest_suggestions(name, suggested_by, suggested_at) VALUES (?,?,?)",
+                                (name, account_id, _s(at)))
+        self.conn.commit()
+        return cur.lastrowid
+
+    def get(self, suggestion_id):
+        r = self.conn.execute("SELECT * FROM interest_suggestions WHERE id=?", (suggestion_id,)).fetchone()
+        return self._row(r) if r else None
+
+    def open_list(self):
+        rows = self.conn.execute("SELECT * FROM interest_suggestions WHERE status='open' ORDER BY id").fetchall()
+        return [self._row(r) for r in rows]
+
+    def open_count_for(self, account_id):
+        return self.conn.execute("SELECT COUNT(*) FROM interest_suggestions WHERE status='open' AND suggested_by=?",
+                                 (account_id,)).fetchone()[0]
+
+    def open_named(self, name):
+        return self.conn.execute("SELECT 1 FROM interest_suggestions WHERE status='open' AND lower(name)=lower(?)",
+                                 (name,)).fetchone() is not None
+
+    def set_status(self, suggestion_id, status):
+        self.conn.execute("UPDATE interest_suggestions SET status=? WHERE id=?", (status, suggestion_id))
+        self.conn.commit()
 
 
 class SqliteStatsRepository(StatsRepository):

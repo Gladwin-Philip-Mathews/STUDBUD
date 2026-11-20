@@ -1,51 +1,70 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { Avatar } from '../shared/avatar';
+import { Section, Sections } from '../shared/sections';
 import { NotificationsService } from '../notifications/notifications.service';
 import { Connected, ConnectionsService, RequestItem, Suggestion } from './connections.service';
 
 @Component({
   selector: 'app-connections-home',
-  imports: [FormsModule],
+  imports: [FormsModule, Sections, Avatar],
   template: `
-    <h2>Connections</h2>
+    <div class="page-head">
+      <h2>Connections</h2>
+      <p class="lead">Find students to study with and keep track of your requests.</p>
+    </div>
     @if (message()) { <p class="notice" id="conn-message" role="status">{{ message() }}</p> }
 
-    <h3>Requests for you</h3>
-    @for (r of incoming(); track r.id) {
-      <div class="row">
-        <span><strong>{{ r.other.displayName }}</strong> @if (r.note) { <em>"{{ r.note }}"</em> }</span>
-        <button type="button" class="accept" (click)="act(r.id, 'accept')">Accept</button>
-        <button type="button" class="decline" (click)="act(r.id, 'decline')">Decline</button>
-      </div>
-    } @empty { <p>No requests.</p> }
+    <app-sections [sections]="sectionList()" [(active)]="section" label="Connections sections">
+      @if (section() === 'suggested') {
+        <h3>Suggested for you</h3>
+        @for (s of suggestions(); track s.accountId) {
+          <div class="row suggestion">
+            <app-avatar [name]="s.displayName" [size]="2.5" />
+            <span><strong>{{ s.displayName }}</strong> <span class="kind">{{ s.intent }}</span><br /><small>{{ shared(s) }}</small></span>
+            <input [(ngModel)]="notes[s.accountId]" [name]="'note' + s.accountId" maxlength="200" aria-label="Optional note to {{ s.displayName }}" placeholder="Optional note" />
+            <button type="button" class="send" (click)="send(s)">Send request</button>
+            <button type="button" class="btn-small" (click)="dismiss(s)">Dismiss</button>
+          </div>
+        } @empty { <p class="empty">No suggestions yet. Complete your profile to see some.</p> }
+      }
 
-    <h3>Your sent requests</h3>
-    @for (r of outgoing(); track r.id) {
-      <div class="row">
-        <span>{{ r.other.displayName }} (pending)</span>
-        <button type="button" (click)="act(r.id, 'withdraw')">Withdraw</button>
-      </div>
-    } @empty { <p>None pending.</p> }
+      @if (section() === 'requests') {
+        <h3>Requests for you</h3>
+        @for (r of incoming(); track r.id) {
+          <div class="row">
+            <app-avatar [name]="r.other.displayName" [size]="2.5" />
+            <span><strong>{{ r.other.displayName }}</strong> @if (r.note) { <br /><em>"{{ r.note }}"</em> }</span>
+            <button type="button" class="accept" (click)="act(r.id, 'accept')">Accept</button>
+            <button type="button" class="decline" (click)="act(r.id, 'decline')">Decline</button>
+          </div>
+        } @empty { <p class="empty">No requests.</p> }
+      }
 
-    <h3>Your connections</h3>
-    @for (c of accepted(); track c.connectionId) {
-      <div class="row">
-        <span><strong>{{ c.displayName }}</strong> {{ shared(c) }}</span>
-        <button type="button" (click)="act(c.connectionId, 'remove')">Remove</button>
-      </div>
-    } @empty { <p>No connections yet.</p> }
+      @if (section() === 'sent') {
+        <h3>Your sent requests</h3>
+        @for (r of outgoing(); track r.id) {
+          <div class="row">
+            <app-avatar [name]="r.other.displayName" [size]="2.5" />
+            <span>{{ r.other.displayName }} <small>(pending)</small></span>
+            <button type="button" class="btn-small" (click)="act(r.id, 'withdraw')">Withdraw</button>
+          </div>
+        } @empty { <p class="empty">None pending.</p> }
+      }
 
-    <h3>Suggested for you</h3>
-    @for (s of suggestions(); track s.accountId) {
-      <div class="row suggestion">
-        <span><strong>{{ s.displayName }}</strong> ({{ s.intent }}) {{ shared(s) }}</span>
-        <input [(ngModel)]="notes[s.accountId]" [name]="'note' + s.accountId" maxlength="200" aria-label="Optional note to {{ s.displayName }}" placeholder="Optional note" />
-        <button type="button" class="send" (click)="send(s)">Send request</button>
-        <button type="button" (click)="dismiss(s)">Dismiss</button>
-      </div>
-    } @empty { <p>No suggestions yet. Complete your profile to see some.</p> }
+      @if (section() === 'connected') {
+        <h3>Your connections</h3>
+        @for (c of accepted(); track c.connectionId) {
+          <div class="row">
+            <app-avatar [name]="c.displayName" [size]="2.5" />
+            <span><strong>{{ c.displayName }}</strong><br /><small>{{ shared(c) }}</small></span>
+            <button type="button" class="btn-small" (click)="act(c.connectionId, 'remove')">Remove</button>
+          </div>
+        } @empty { <p class="empty">No connections yet.</p> }
+      }
+    </app-sections>
   `,
-  styles: `.row { display: flex; gap: .5rem; align-items: center; flex-wrap: wrap; margin: .35rem 0; } .row span { flex: 1; }`,
+  styles: `.suggestion input { flex: 1; min-width: 10rem; max-width: 16rem; }`,
 })
 export class ConnectionsHome implements OnInit {
   private readonly api = inject(ConnectionsService);
@@ -55,6 +74,13 @@ export class ConnectionsHome implements OnInit {
   readonly incoming = signal<RequestItem[]>([]);
   readonly outgoing = signal<RequestItem[]>([]);
   readonly message = signal('');
+  readonly section = signal('suggested');
+  readonly sectionList = computed<Section[]>(() => [
+    { id: 'suggested', label: 'Suggested' },
+    { id: 'requests', label: 'Requests', count: this.incoming().length },
+    { id: 'sent', label: 'Sent' },
+    { id: 'connected', label: 'Connected' },
+  ]);
   notes: Record<number, string> = {};
 
   ngOnInit(): void {

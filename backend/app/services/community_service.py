@@ -203,6 +203,14 @@ class CommunityService:
         return post, replies
 
     # ---- shared helpers for controllers ----
+    def community_name(self, community_id: int) -> str:
+        """The community a post belongs to, shown on every post card (D4 name)."""
+        cache = self.__dict__.setdefault("_names", {})
+        if community_id not in cache:
+            c = self.communities.get(community_id)
+            cache[community_id] = c.name if c else ""
+        return cache[community_id]
+
     def author_name(self, account_id: int) -> str:
         a = self.accounts.get(account_id)
         if a is None or a.status == AccountStatus.DELETED:

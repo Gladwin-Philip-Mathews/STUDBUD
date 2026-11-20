@@ -7,7 +7,9 @@ import { AuthService } from './auth.service';
   selector: 'app-register',
   imports: [FormsModule, RouterLink],
   template: `
+    <div class="auth-card card">
     <h2>Create your account</h2>
+    <p class="lead">Use your RIT email. We will send you a link to confirm it.</p>
     <form (ngSubmit)="submit()" #f="ngForm" novalidate>
       <label>RIT email
         <input name="email" type="email" [(ngModel)]="email" autocomplete="email" [attr.aria-invalid]="errors()['email'] ? true : null" [attr.aria-describedby]="errors()['email'] ? 'email-error' : null" />
@@ -36,7 +38,9 @@ import { AuthService } from './auth.service';
     </form>
     @if (message()) { <p class="notice" id="register-message" role="status">{{ message() }}</p> }
     <p>Already registered? <a routerLink="/sign-in">Sign in</a></p>
+    </div>
   `,
+  styles: `.auth-card { max-width: 34rem; margin: 1rem auto; } form { max-width: none; margin-top: 1rem; }`,
 })
 export class Register {
   private readonly auth = inject(AuthService);

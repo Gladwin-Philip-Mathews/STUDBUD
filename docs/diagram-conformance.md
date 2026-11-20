@@ -50,3 +50,4 @@ notification routes call it with the item (NFR-013).
 | D11 Settings | holds accepted domains and settings | two tables, `settings` and `accepted_domains` | Internal partition of one store. |
 | Retention clean-up | 5.0 "applies message retention"; no process owns OR-002 | `RetentionService` applies OR-001 and OR-002 on demand and from the shell | Allocate OR-002 to 9.0 (or a note under 6.0) in the next M3 revision. |
 | Cover of the M3 PDF | "ikwncGladwin Mathews" | | Typo in the document. |
+| Interest suggestions | FR-102: the administrator maintains the interest communities; no student request flow | table `interest_suggestions` in D4's area, `POST /api/communities/suggestions`, list/create/dismiss under `/api/admin` | A student can ask for a community; nothing is created until the administrator agrees, so FR-102 and DR-004 still hold. Add to process 9.0 in the next M3 revision. |
