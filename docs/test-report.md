@@ -4,8 +4,8 @@ Results of the final run on `main` before submission (18 November 2026, after th
 
 | Suite | Tool | Tests | Result |
 |---|---|---|---|
-| Backend (Flask API, services, repositories) | pytest | 146 | all passed (about 90 s) |
-| Frontend (Angular services, routes, app shell) | Karma and Jasmine, headless Chrome | 25 | all passed |
+| Backend (Flask API, services, repositories) | pytest | 178 | all passed (146 before the 20 November review; 15 added by the SRS pass, 14 by the diagram alignment, 3 by the interest suggestions and community names) |
+| Frontend (Angular services, routes, app shell) | Karma and Jasmine, headless Chrome | 30 | all passed |
 | Production build | `ng build` | n/a | succeeds |
 
 Run them with `pytest` in `backend` and `npm test` in `frontend`.
@@ -25,12 +25,14 @@ Run them with `pytest` in `backend` and `npm test` in `frontend`.
 | `test_repositories.py`, `test_models.py`, `test_settings.py` | 21 | uniqueness, model rules, settings defaults and limits |
 | `test_email_gateway.py` | 5 | stub and live gateway selection, failure handling |
 | `test_scaffolding.py`, `test_health.py`, `test_seed.py` | 7 | app set-up, health check, demo seed |
+| `test_m3_alignment.py` (20 November diagram alignment) | 14 | related item on every notification (DR-011), `may_access` (NFR-013, IF-004), `respond` route, escalation choice and case summary (DF-23, DF-36, DF-24), later note (DF-25), email choice in the profile (DF-06), `Community.created_at`, `SystemSetting`, `AuditRecord`, enumerations, schema migration |
+| `test_review_fixes.py` (20 November review) | 15 | HTTPS enforcement and secret-key guard (IF-006), TLS floor on the email leg (NFR-010), plain error messages and duplicate-safe repeat of a post (NFR-008), database integrity rules (DR-007, DR-009, DR-011), retention clean-up for messages and conduct records (OR-001, OR-002) |
 
 ## What is not covered by automated tests
 
 - Live email through the RIT mail server (IF-003): only the stub gateway is tested.
 - Angular components are checked through their services and by hand; there are no browser end-to-end tests.
 - Response-time targets were not measured under load.
-- Scheduled clean-up of old messages and logs (retention): the settings and the retention rule are tested, but no scheduler runs it.
+- The retention clean-up is tested (`test_review_fixes.py`, 20 November) and runs on demand (`POST /api/admin/clean-up` or `flask --app app clean-up`); the daily schedule itself is a host job and is not in the code.
 
 See `docs/requirements-coverage.md` for the per-requirement view.

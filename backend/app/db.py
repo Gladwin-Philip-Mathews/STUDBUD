@@ -29,6 +29,13 @@ def init_db(conn: sqlite3.Connection) -> None:
     for column in ("notice_accepted_at", "verified_at"):  # OR-003, DR-001
         if column not in account_columns:
             conn.execute(f"ALTER TABLE accounts ADD COLUMN {column} TEXT")
+    # Columns added by the M3 alignment of 20 November: notifications.related_item (DR-011, D9),
+    # communities.created_at (D4, CD-1a) and audit_records.item_ref (DR-015, CD-1a AuditRecord.itemRef).
+    for table, column, kind in (("notifications", "related_item", "TEXT"), ("communities", "created_at", "TEXT"),
+                                ("audit_records", "item_ref", "TEXT")):
+        existing = {r["name"] for r in conn.execute(f"PRAGMA table_info({table})")}
+        if column not in existing:
+            conn.execute(f"ALTER TABLE {table} ADD COLUMN {column} {kind}")
     for d in DEFAULT_DOMAINS:
         conn.execute("INSERT OR IGNORE INTO accepted_domains(domain) VALUES (?)", (d,))
     conn.commit()

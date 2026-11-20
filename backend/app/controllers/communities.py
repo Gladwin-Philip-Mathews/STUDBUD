@@ -2,8 +2,7 @@
 from flask import Blueprint, g, jsonify, request
 
 from ..container import get_service
-from ..models.enums import Role
-from ..security import profile_required, role_required
+from ..security import page_required, profile_required
 
 bp = Blueprint("communities", __name__, url_prefix="/api")
 
@@ -23,6 +22,7 @@ def _page():
 
 def post_json(p, viewer_id, replies=None, community_name=None):
     s = _svc()
+    community_name = community_name or s.community_name(p.community_id)
     out = {"id": p.id, "communityId": p.community_id, "kind": p.kind, "title": p.title, "text": p.body,
            "status": p.status, "createdAt": p.created_at.isoformat(), "edited": p.edited_at is not None,
            "author": {"id": p.author_id, "displayName": s.author_name(p.author_id)},
@@ -65,12 +65,22 @@ def communities():
 
 
 @bp.post("/communities")
-@role_required(Role.ADMINISTRATOR)
+@page_required("admin")  # FR-021: administrators only (an admin page action, IF-004)
 def create_interest():
     result = _svc().create_interest_community((request.get_json(silent=True) or {}).get("name"))
     if not result.ok:
         return _errors(result)
     return jsonify({"community": community_json(result.item, False)}), 201
+
+
+@bp.post("/communities/suggestions")
+@profile_required
+def suggest_interest():
+    """A student asks for a community that is not on the list; the administrator decides (FR-102)."""
+    result = get_service("admin").suggest_interest(g.account.id, (request.get_json(silent=True) or {}).get("name"))
+    if not result.ok:
+        return jsonify({"errors": result.errors}), 400
+    return jsonify({"message": "Thanks. The administrator will see your suggestion."}), 201
 
 
 @bp.post("/communities/<int:cid>/join")
@@ -96,11 +106,20 @@ def _paged(result, viewer_id, empty_message):
                     "message": None if posts else empty_message})
 
 
+def _community_posts_json(result, viewer_id, cid):
+    response = _paged(result, viewer_id, "No posts yet.")
+    if result is not None:  # the page heading names its community
+        body = response.get_json()
+        body["community"] = {"id": cid, "name": _svc().community_name(cid)}
+        return jsonify(body)
+    return response
+
+
 @bp.get("/communities/<int:cid>/posts")
 @profile_required
 def community_posts(cid):
-    return _paged(_svc().community_posts(g.account.id, cid, request.args.get("kind") or None, _page()),
-                  g.account.id, "No posts yet.")
+    return _community_posts_json(_svc().community_posts(g.account.id, cid, request.args.get("kind") or None, _page()),
+                                 g.account.id, cid)
 
 
 @bp.post("/communities/<int:cid>/posts")
@@ -110,6 +129,8 @@ def create_post(cid):
     result = _svc().create_post(g.account.id, cid, d.get("kind"), d.get("title"), d.get("text"))
     if not result.ok:
         return _errors(result)
+    if result.repeated:  # NFR-008: the same post again returns the stored one instead of a second copy
+        return jsonify({"post": post_json(result.item, g.account.id), "message": "This post was already published."}), 200
     return jsonify({"post": post_json(result.item, g.account.id)}), 201
 
 

@@ -36,6 +36,7 @@ export interface Post {
   edited: boolean;
   author: Author;
   mine: boolean;
+  community?: string;
   notice?: string;
   replies?: Reply[];
 }
@@ -43,6 +44,7 @@ export interface PostPage {
   posts: Post[];
   hasMore: boolean;
   message: string | null;
+  community?: { id: number; name: string };
 }
 export interface Outcome<T = unknown> {
   ok: boolean;
@@ -81,6 +83,12 @@ export class CommunitiesService {
   }
   communityPosts(id: number, kind = '', page = 1): Observable<PostPage> {
     return this.http.get<PostPage>(`/api/communities/${id}/posts`, { params: { kind, page } });
+  }
+  suggestInterest(name: string): Observable<Outcome> {
+    return this.http.post<{ message: string }>('/api/communities/suggestions', { name }).pipe(
+      map((r) => ({ ok: true, message: r.message })),
+      catchError((e) => of(failed(e)))
+    );
   }
   createPost(communityId: number, body: { kind: string; title: string; text: string }): Observable<Outcome<Post>> {
     return this.http.post<{ post: Post }>(`/api/communities/${communityId}/posts`, body).pipe(

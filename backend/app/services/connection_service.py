@@ -7,7 +7,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Callable, Optional
 
 from ..container import service
-from ..models import AccountStatus, Connection, ConnectionStatus
+from ..models import AccountStatus, Connection, ConnectionStatus, ItemRef
 from ..models.enums import EventType, RefusalReason, SettingName
 
 MAX_NOTE = 200
@@ -73,7 +73,7 @@ class ConnectionService:
                                             status_changed_at=now))
         sender = self.accounts.get(sender_id)
         self.notifications.notify(receiver_id, EventType.REQUEST_RECEIVED,
-                                  f"{sender.display_name} sent you a connection request.")
+                                  f"{sender.display_name} sent you a connection request.", ItemRef("connection", c.id))  # M20
         return RequestResult(connection=c)
 
     # ---- answering (FR-044 to FR-046, FR-048) ----
@@ -95,7 +95,7 @@ class ConnectionService:
         self.connections.save(c)
         me = self.accounts.get(actor_id)
         self.notifications.notify(c.requester_id, EventType.REQUEST_ANSWERED,
-                                  f"{me.display_name} accepted your connection request.")
+                                  f"{me.display_name} accepted your connection request.", ItemRef("connection", c.id))
         return c
 
     def decline(self, connection_id: int, actor_id: int) -> Optional[Connection]:
@@ -105,7 +105,8 @@ class ConnectionService:
         c.decline(self.clock())
         self.connections.save(c)
         # FR-045: tell the requester only that the request was not accepted
-        self.notifications.notify(c.requester_id, EventType.REQUEST_ANSWERED, "Your connection request was not accepted.")
+        self.notifications.notify(c.requester_id, EventType.REQUEST_ANSWERED, "Your connection request was not accepted.",
+                                  ItemRef("connection", c.id))
         return c
 
     def withdraw(self, connection_id: int, actor_id: int) -> Optional[Connection]:

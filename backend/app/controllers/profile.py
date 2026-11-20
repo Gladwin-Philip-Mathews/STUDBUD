@@ -7,16 +7,19 @@ from ..security import login_required
 bp = Blueprint("profile", __name__, url_prefix="/api/profile")
 
 
-def profile_json(p):
-    return {"intent": p.intent, "cohort": p.cohort, "yearOfStudy": p.year_of_study,
-            "interests": p.interests, "courses": p.course_codes}
+def profile_json(p, account=None):
+    out = {"intent": p.intent, "cohort": p.cohort, "yearOfStudy": p.year_of_study,
+           "interests": p.interests, "courses": p.course_codes}
+    if account is not None:
+        out["emailNotifications"] = bool(account.email_notifications)  # DF-06: the email choice is part of the profile
+    return out
 
 
 @bp.get("")
 @login_required
 def mine():
     p = get_service("profiles").get(g.account.id)
-    return jsonify({"profile": profile_json(p) if p else None})
+    return jsonify({"profile": profile_json(p, g.account) if p else None})
 
 
 @bp.put("")
@@ -27,7 +30,10 @@ def save():
                                           d.get("interests"), d.get("courses"))
     if not result.ok:
         return jsonify({"errors": result.errors}), 400
-    return jsonify({"profile": profile_json(result.profile)}), 200
+    if isinstance(d.get("emailNotifications"), bool):  # FR-082 through process 2.0 (DF-06); the notifications page keeps its switch
+        get_service("notifications").set_email_enabled(g.account.id, d["emailNotifications"])
+        g.account.email_notifications = d["emailNotifications"]
+    return jsonify({"profile": profile_json(result.profile, g.account)}), 200
 
 
 @bp.get("/courses")

@@ -173,3 +173,14 @@ def test_deleted_student_shows_as_deleted_student(world):  # FR-015
     from .helpers import PASSWORD
     assert ann.delete("/api/profile", json={"password": PASSWORD}).status_code == 200
     assert bo.get(f"/api/posts/{pid}").get_json()["post"]["author"]["displayName"] == "deleted student"
+
+
+
+def test_posts_and_community_page_name_their_community(world):  # the feed, the community page and the post view say where a post is from
+    ann = world["c"]["Ann"]
+    pid = post(ann, world["course"]).get_json()["post"]["id"]
+    assert "SWEN-261" in post(ann, world["course"], title="Another question").get_json()["post"]["community"]
+    assert any("SWEN-261" in p["community"] for p in ann.get("/api/feed").get_json()["posts"])
+    assert "SWEN-261" in ann.get(f"/api/posts/{pid}").get_json()["post"]["community"]
+    page = ann.get(f"/api/communities/{world['course']}/posts").get_json()
+    assert "SWEN-261" in page["community"]["name"] and page["community"]["id"] == world["course"]

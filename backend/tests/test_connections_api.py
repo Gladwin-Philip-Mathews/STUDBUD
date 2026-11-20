@@ -158,14 +158,26 @@ def test_no_email_when_switched_off_but_in_app_stays(pair, app, gateway):  # AC-
     assert ben.get("/api/notifications").get_json()["unread"] == 1
 
 
-def test_undelivered_email_is_attempted_at_most_four_times(pair, app, gateway):  # AC-FR-084a, CH-15
+def test_unavailable_route_leaves_the_email_not_sent_and_retries_until_the_route_is_back(pair, app, gateway):
+    """SD-1 M30, M31 and SCN-01 failure postconditions: an unavailable route changes nothing except that the handoff
+    is tried again later; it is not a returned message, so it does not use up the three resends of FR-084."""
+    from app.container import get_service
+    from app.models.enums import EmailStatus
     a, b, ana, ben = pair
     gateway.available = False
     send(ana, b)
-    for _ in range(8):
-        dispatch_pending_emails(app)
-    assert gateway.attempts == 4
+    for _ in range(3):
+        assert dispatch_pending_emails(app) == 0
+    with app.app_context():
+        n = get_service("notifications").list_for(b)[0]
+        assert n.email_status == EmailStatus.NOT_SENT and n.email_resends == 0
+    assert gateway.sent == [] and gateway.attempts == 3
     assert ben.get("/api/notifications").get_json()["unread"] == 1  # in-app notification stays
+    gateway.available = True
+    assert dispatch_pending_emails(app) == 1  # handed over once the route is back
+    assert dispatch_pending_emails(app) == 0
+    with app.app_context():
+        assert get_service("notifications").list_for(b)[0].email_status == EmailStatus.HANDED_OVER
 
 
 def test_email_is_handed_over_after_response_in_production_mode(app, gateway):

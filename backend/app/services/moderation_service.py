@@ -8,7 +8,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Callable, Optional
 
 from ..container import service
-from ..models import ConductAction, Decision, EventType, ReportReason, SafetyReport, ModerationOutcome
+from ..models import ConductAction, Decision, EventType, ItemRef, ReportReason, SafetyReport, ModerationOutcome
 from ..models.enums import SettingName
 
 MAX_TEXT = 500  # FR-060
@@ -26,6 +26,7 @@ class ModResult:
     item: object = None
     errors: dict = field(default_factory=dict)
     not_found: bool = False
+    case_summary: Optional[dict] = None  # DF-24, filled when a decision carried the escalation choice (DF-36)
 
     @property
     def ok(self) -> bool:
@@ -136,11 +137,13 @@ class ModerationService:
         if report.acknowledge(self.clock(), moderator_id):
             self.reports.save(report)
             self.notifications.notify(report.reporter_id, EventType.REPORT_ACKNOWLEDGED,
-                                      "Your report was received and is being reviewed.")
+                                      "Your report was received and is being reviewed.", ItemRef("report", report.id))  # DF-26a
         return ModResult(item=report)
 
     # ---- 6.4 Record moderation decision (FR-064, FR-067, FR-068) ----
-    def decide(self, moderator_id: int, report_id: int, decision, action, note) -> ModResult:
+    def decide(self, moderator_id: int, report_id: int, decision, action, note, escalate: bool = False) -> ModResult:
+        """DF-23 moderation decision: decision + action + note + (escalation choice, upheld only). On an upheld report
+        with the escalation choice, 6.4 passes DF-36 to 6.6 and the case summary comes back with the outcome."""
         report = self.reports.get(report_id)
         if report is None:
             return ModResult(not_found=True)
@@ -156,6 +159,8 @@ class ModerationService:
             errors["note"] = "Write a note of up to 1000 characters."
         if not errors and decision == Decision.DISMISSED.value and action != ConductAction.NONE.value:
             errors["action"] = "A dismissed report has no action."
+        if not errors and escalate and decision != Decision.UPHELD.value:
+            errors["escalate"] = "Only an upheld report can be escalated to Student Affairs."
         if not errors and action == ConductAction.CONTENT_HIDDEN.value and report.item_type == "student":
             errors["action"] = "There is no content to hide on a student report."
         if not errors and report.acknowledged_at is None:
@@ -165,10 +170,15 @@ class ModerationService:
         outcome = ModerationOutcome(report_id, decision, action, note, self.clock(), moderator_id)
         self.reports.save_outcome(outcome)
         self.audit.record(moderator_id, "DECISION", f"report {report_id}", f"{decision}, {action}")  # NFR-015
-        self.apply_action(report, action)  # 6.5
-        self.notifications.notify(report.reporter_id, EventType.REPORT_CLOSED,  # FR-068: no action, no name
-                                  "Your report was reviewed and closed.")
-        return ModResult(item=outcome)
+        if action != ConductAction.NONE.value:
+            self.apply_action(report, action)  # DF-35 to 6.5
+        self.notifications.notify(report.reporter_id, EventType.REPORT_CLOSED,  # DF-26b; FR-068: no action, no name
+                                  "Your report was reviewed and closed.", ItemRef("report", report_id))
+        summary = None
+        if escalate:  # DF-36 escalation request to 6.6
+            summary = self.case_summary(moderator_id, report_id).item
+            self.audit.record(moderator_id, "ESCALATION", f"report {report_id}", "case summary prepared for Student Affairs")
+        return ModResult(item=outcome, case_summary=summary)
 
     # ---- 6.5 Apply conduct action (FR-065, FR-066) ----
     def apply_action(self, report: SafetyReport, action: str) -> None:

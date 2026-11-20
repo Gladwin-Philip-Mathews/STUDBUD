@@ -60,6 +60,11 @@ CREATE TABLE IF NOT EXISTS connections (
   created_at TEXT NOT NULL,
   status_changed_at TEXT NOT NULL
 );
+-- DR-007: one open (pending or accepted) connection per pair of students, whichever direction it was sent in.
+-- Enforced in the database as well as in ConnectionService.check_request, so a double submit cannot create two rows.
+CREATE UNIQUE INDEX IF NOT EXISTS one_open_connection_per_pair
+  ON connections(min(requester_id, receiver_id), max(requester_id, receiver_id))
+  WHERE status IN ('pending', 'accepted') AND requester_id IS NOT NULL AND receiver_id IS NOT NULL;
 CREATE TABLE IF NOT EXISTS notifications (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   recipient_id INTEGER NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,
@@ -68,8 +73,15 @@ CREATE TABLE IF NOT EXISTS notifications (
   created_at TEXT NOT NULL,
   read_at TEXT,
   email_status TEXT NOT NULL DEFAULT 'not sent',
-  email_resends INTEGER NOT NULL DEFAULT 0 CHECK (email_resends BETWEEN 0 AND 3)
+  email_resends INTEGER NOT NULL DEFAULT 0 CHECK (email_resends BETWEEN 0 AND 3),
+  related_item TEXT
 );
+-- DR-011: a notification with an event type outside the six events cannot be stored (AC-DR-011a).
+-- A trigger rather than a CHECK so that databases created before this rule get it too.
+CREATE TRIGGER IF NOT EXISTS notifications_event_type_check BEFORE INSERT ON notifications
+WHEN NEW.event_type NOT IN ('REPLY_ADDED', 'REQUEST_RECEIVED', 'REQUEST_ANSWERED', 'MESSAGE_RECEIVED',
+                            'REPORT_ACKNOWLEDGED', 'REPORT_CLOSED')
+BEGIN SELECT RAISE(ABORT, 'notification event type is not one of the six events (DR-011)'); END;
 CREATE TABLE IF NOT EXISTS settings (
   name TEXT PRIMARY KEY,
   value TEXT NOT NULL,
@@ -86,5 +98,6 @@ CREATE TABLE IF NOT EXISTS audit_records (
   at TEXT NOT NULL,
   actor_id INTEGER,
   action TEXT NOT NULL,
+  item_ref TEXT,
   detail TEXT NOT NULL DEFAULT ''
 );

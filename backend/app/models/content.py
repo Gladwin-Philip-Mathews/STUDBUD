@@ -22,10 +22,11 @@ class Reportable(ABC):
 @dataclass
 class Community:
     name: str
-    kind: str  # course | interest
+    kind: str  # course | interest (CommunityKind)
     course_code: Optional[str] = None
     status: str = "active"
     member_count: int = 0
+    created_at: Optional[datetime] = None  # D4, CD-1a createdAt
     id: Optional[int] = None
 
     def is_active(self) -> bool:

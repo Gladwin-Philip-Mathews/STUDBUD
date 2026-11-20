@@ -8,33 +8,38 @@ import { PostList } from './post-list';
   selector: 'app-community-page',
   imports: [FormsModule, RouterLink, PostList],
   template: `
-    <p><a routerLink="/communities">← All communities</a></p>
-    <h2>Community</h2>
-    <form (ngSubmit)="create()">
-      <h3>New post</h3>
-      <select name="newKind" [(ngModel)]="newKind">
+    <a class="back" routerLink="/communities">← All communities</a>
+    <div class="page-head">
+      <h2 id="community-name">{{ name() || 'Community' }}</h2>
+      <p class="lead">Posting in <strong>{{ name() || 'this community' }}</strong>. Only members can read and reply.</p>
+    </div>
+    <form class="card" (ngSubmit)="create()">
+      <h3>New post in {{ name() || 'this community' }}</h3>
+      <select name="newKind" aria-label="Kind of post" [(ngModel)]="newKind">
         <option value="">Kind…</option>
         @for (k of kinds; track k) { <option [value]="k">{{ k }}</option> }
       </select>
-      @if (errors()['kind']) { <p class="error">{{ errors()['kind'] }}</p> }
-      <input name="title" placeholder="Title (5 to 120 characters)" maxlength="120" [(ngModel)]="title" />
-      @if (errors()['title']) { <p class="error">{{ errors()['title'] }}</p> }
-      <textarea name="text" rows="4" placeholder="Text (up to 2000 characters)" maxlength="2000" [(ngModel)]="text"></textarea>
-      @if (errors()['text']) { <p class="error">{{ errors()['text'] }}</p> }
-      @if (errors()['community']) { <p class="error">{{ errors()['community'] }}</p> }
+      @if (errors()['kind']) { <p class="error" role="alert">{{ errors()['kind'] }}</p> }
+      <input name="title" aria-label="Title (5 to 120 characters)" placeholder="Title (5 to 120 characters)" maxlength="120" [(ngModel)]="title" />
+      @if (errors()['title']) { <p class="error" role="alert">{{ errors()['title'] }}</p> }
+      <textarea name="text" rows="4" aria-label="Text (up to 2000 characters)" placeholder="Text (up to 2000 characters)" maxlength="2000" [(ngModel)]="text"></textarea>
+      @if (errors()['text']) { <p class="error" role="alert">{{ errors()['text'] }}</p> }
+      @if (errors()['community']) { <p class="error" role="alert">{{ errors()['community'] }}</p> }
       <button type="submit" class="publish">Post</button>
     </form>
 
-    <h3>Posts</h3>
-    <select name="filter" [(ngModel)]="kind" (ngModelChange)="load()">
-      <option value="">All kinds</option>
-      @for (k of kinds; track k) { <option [value]="k">{{ k }}</option> }
-    </select>
-    <app-post-list [posts]="posts()" />
-    @if (message()) { <p>{{ message() }}</p> }
+    <div class="bar head-bar">
+      <h3>Posts in {{ name() || 'this community' }}</h3>
+      <select name="filter" aria-label="Show posts of one kind" [(ngModel)]="kind" (ngModelChange)="load()">
+        <option value="">All kinds</option>
+        @for (k of kinds; track k) { <option [value]="k">{{ k }}</option> }
+      </select>
+    </div>
+    <app-post-list [posts]="posts()" [showCommunity]="false" />
+    @if (message()) { <p class="empty" role="status">{{ message() }}</p> }
     @if (hasMore()) { <button type="button" (click)="more()">Show more</button> }
   `,
-  styles: `input, textarea, select { display: block; margin: .4rem 0; max-width: 100%; } .error { color: #b00020; }`,
+  styles: `.head-bar { justify-content: space-between; margin-top: 1.5rem; } .head-bar h3 { margin: 0; } .head-bar select { max-width: 12rem; } form { max-width: none; }`,
 })
 export class CommunityPage implements OnInit {
   private readonly api = inject(CommunitiesService);
@@ -50,6 +55,7 @@ export class CommunityPage implements OnInit {
   readonly message = signal<string | null>(null);
   readonly hasMore = signal(false);
   readonly errors = signal<Record<string, string>>({});
+  readonly name = signal('');
 
   ngOnInit(): void {
     this.id = Number(this.route.snapshot.paramMap.get('id'));
@@ -62,6 +68,7 @@ export class CommunityPage implements OnInit {
         this.posts.set(r.posts);
         this.hasMore.set(r.hasMore);
         this.message.set(r.message);
+        if (r.community) this.name.set(r.community.name);
       },
       error: () => this.message.set('Join this community to read its posts.'),
     });

@@ -7,7 +7,9 @@ import { AuthService } from './auth.service';
   selector: 'app-sign-in',
   imports: [FormsModule, RouterLink],
   template: `
-    <h2>Sign in</h2>
+    <div class="auth-card card">
+    <h2>Welcome back</h2>
+    <p class="lead">Sign in with your RIT email to find study partners and friends.</p>
     <form (ngSubmit)="submit()" novalidate>
       <label>Email <input name="email" type="email" [(ngModel)]="email" autocomplete="email" /></label>
       <label>Password
@@ -15,13 +17,15 @@ import { AuthService } from './auth.service';
       </label>
       <button type="submit" [disabled]="busy()">Sign in</button>
     </form>
-    @if (error()) { <p class="error" id="sign-in-error">{{ error() }}</p> }
+    @if (error()) { <p class="error" id="sign-in-error" role="alert">{{ error() }}</p> }
     @if (canResend()) {
       <button type="button" id="resend" (click)="resend()">Send a new verification message</button>
     }
     @if (info()) { <p class="notice" id="sign-in-info">{{ info() }}</p> }
     <p>New here? <a routerLink="/register">Create an account</a></p>
+    </div>
   `,
+  styles: `.auth-card { max-width: 28rem; margin: 1.5rem auto; } form { max-width: none; margin-top: 1rem; }`,
 })
 export class SignIn {
   private readonly auth = inject(AuthService);

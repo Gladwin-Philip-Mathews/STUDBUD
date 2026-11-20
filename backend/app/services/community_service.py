@@ -5,18 +5,19 @@ Hidden content shows only to its author (FR-065); deleted content is soft-delete
 see what an open report names (FR-033).
 """
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Callable, Optional
 
 from ..container import service
-from ..models import AccountStatus, Community, EventType, Post, Reply
+from ..models import AccountStatus, Community, EventType, ItemRef, Post, PostKind, Reply
 
-POST_KINDS = ("question", "share", "study partner request")  # DR-004
+POST_KINDS = tuple(k.value for k in PostKind)  # DR-005
 TITLE = (5, 120)
 TEXT = (1, 2000)
 REPLY = (1, 1000)
 COMMUNITY_NAME = (3, 50)
 MIN_SEARCH = 2  # FR-036
+REPEAT_WINDOW = timedelta(minutes=5)  # NFR-008: the same post submitted again inside this window is not duplicated
 
 
 def utc_now() -> datetime:
@@ -28,6 +29,7 @@ class ContentResult:
     item: object = None
     errors: dict = field(default_factory=dict)
     not_found: bool = False
+    repeated: bool = False  # NFR-008: the action was a repeat of one already stored; nothing new was created
 
     @property
     def ok(self) -> bool:
@@ -100,7 +102,12 @@ class CommunityService:
             errors["community"] = "This community is archived, so new posts are not accepted."
         if errors:
             return ContentResult(errors=errors)
-        post = self.posts.add_post(Post(community_id, author_id, kind, title, text, created_at=self.clock()))
+        now = self.clock()
+        # NFR-008: when a student repeats the submission after a failure or a double click, one post exists.
+        same = self.posts.find_same_post_since(author_id, community_id, kind, title, text, now - REPEAT_WINDOW)
+        if same is not None:
+            return ContentResult(item=same, repeated=True)
+        post = self.posts.add_post(Post(community_id, author_id, kind, title, text, created_at=now))
         return ContentResult(item=post)
 
     def reply(self, author_id: int, post_id: int, text) -> ContentResult:
@@ -115,7 +122,8 @@ class CommunityService:
         reply = self.posts.add_reply(Reply(post_id, author_id, text, created_at=self.clock()))
         if post.author_id != author_id:  # FR-032, FR-080
             me = self.accounts.get(author_id)
-            self.notifications.notify(post.author_id, EventType.REPLY_ADDED, f"{me.display_name} replied to your post.")
+            self.notifications.notify(post.author_id, EventType.REPLY_ADDED, f"{me.display_name} replied to your post.",
+                                      ItemRef("post", post.id))  # DF-11
         return ContentResult(item=reply)
 
     def _own(self, item, account_id):
@@ -195,6 +203,14 @@ class CommunityService:
         return post, replies
 
     # ---- shared helpers for controllers ----
+    def community_name(self, community_id: int) -> str:
+        """The community a post belongs to, shown on every post card (D4 name)."""
+        cache = self.__dict__.setdefault("_names", {})
+        if community_id not in cache:
+            c = self.communities.get(community_id)
+            cache[community_id] = c.name if c else ""
+        return cache[community_id]
+
     def author_name(self, account_id: int) -> str:
         a = self.accounts.get(account_id)
         if a is None or a.status == AccountStatus.DELETED:

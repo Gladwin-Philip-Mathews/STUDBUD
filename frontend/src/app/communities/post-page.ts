@@ -3,18 +3,25 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ConnectionsService } from '../connections/connections.service';
 import { ReportForm } from '../moderation/report-form';
+import { Avatar } from '../shared/avatar';
 import { CommunitiesService, Post } from './communities.service';
 
 @Component({
   selector: 'app-post-page',
-  imports: [FormsModule, RouterLink, ReportForm],
+  imports: [FormsModule, RouterLink, ReportForm, Avatar],
   template: `
-    <p><a routerLink="/communities">← Communities</a></p>
     @if (post(); as p) {
-      <h2>{{ p.title }}</h2>
-      <small>{{ p.kind }} · {{ p.author.displayName }} · {{ p.createdAt.slice(0, 16).replace('T', ' ') }}@if (p.edited) { · edited }</small>
-      @if (p.notice) { <p class="notice">{{ p.notice }}</p> }
-      <p>{{ p.text }}</p>
+      <a class="back" [routerLink]="['/communities', p.communityId]">← Back to {{ p.community || 'the community' }}</a>
+      <article class="card post-full">
+        @if (p.community) { <div><a class="community-tag" [routerLink]="['/communities', p.communityId]">{{ p.community }}</a></div> }
+        <div class="byline">
+          <app-avatar [name]="p.author.displayName" [size]="1.6" />
+          <span>{{ p.author.displayName }} · {{ p.createdAt.slice(0, 16).replace('T', ' ') }}@if (p.edited) { · edited }</span>
+        </div>
+        <h2>{{ p.title }}</h2>
+        <div><span class="kind" [class.kind-partner]="p.kind === 'study partner request'">{{ p.kind }}</span></div>
+        @if (p.notice) { <p class="notice">{{ p.notice }}</p> }
+        <p class="body">{{ p.text }}</p>
       <div class="actions">
         @if (p.mine) { <button type="button" class="delete" (click)="deletePost()">Delete</button> }
         @else {
@@ -22,31 +29,38 @@ import { CommunitiesService, Post } from './communities.service';
           <app-report-form itemType="post" [itemId]="p.id" />
         }
       </div>
+      </article>
 
       <h3>Replies</h3>
       @for (r of p.replies; track r.id) {
         <div class="reply">
-          <strong>{{ r.author.displayName }}</strong>: {{ r.text }} @if (r.edited) { <small>(edited)</small> }
-          @if (r.notice) { <small class="notice">{{ r.notice }}</small> }
-          @if (r.mine) { <button type="button" (click)="deleteReply(r.id)">Delete</button> }
-          @else {
-            <button type="button" (click)="connect(r.author.id)">Connect</button>
-            <app-report-form itemType="reply" [itemId]="r.id" />
-          }
+          <app-avatar [name]="r.author.displayName" [size]="2" />
+          <div class="reply-body">
+            <strong>{{ r.author.displayName }}</strong> <small>{{ r.createdAt.slice(0, 16).replace('T', ' ') }}@if (r.edited) { · edited }</small>
+            <p>{{ r.text }}</p>
+            @if (r.notice) { <small class="notice">{{ r.notice }}</small> }
+            <div class="actions">
+              @if (r.mine) { <button type="button" class="btn-small" (click)="deleteReply(r.id)">Delete</button> }
+              @else {
+                <button type="button" class="btn-small" (click)="connect(r.author.id)">Connect</button>
+                <app-report-form itemType="reply" [itemId]="r.id" />
+              }
+            </div>
+          </div>
         </div>
-      } @empty { <p>No replies yet.</p> }
+      } @empty { <p class="empty">No replies yet. Be the first to answer.</p> }
 
-      <form (ngSubmit)="reply()">
-        <textarea name="reply" rows="3" maxlength="1000" placeholder="Write a reply (up to 1000 characters)" [(ngModel)]="text"></textarea>
-        @if (error()) { <p class="error">{{ error() }}</p> }
+      <form class="card" (ngSubmit)="reply()">
+        <textarea name="reply" rows="3" maxlength="1000" aria-label="Write a reply (up to 1000 characters)" placeholder="Write a reply (up to 1000 characters)" [(ngModel)]="text"></textarea>
+        @if (error()) { <p class="error" role="alert">{{ error() }}</p> }
         <button type="submit" class="send-reply">Reply</button>
       </form>
-      @if (info()) { <p class="notice">{{ info() }}</p> }
+      @if (info()) { <p class="notice" role="status">{{ info() }}</p> }
     } @else {
       <p>This post is not available.</p>
     }
   `,
-  styles: `textarea { display: block; width: 100%; max-width: 40rem; margin: .4rem 0; } .reply { margin: .5rem 0; background: var(--white); border: 1px solid var(--line); border-radius: 10px; padding: .6rem .9rem; display: flex; gap: .6rem; align-items: center; flex-wrap: wrap; } button { margin-right: .4rem; } .error { color: #b00020; }`,
+  styles: `.post-full .byline { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; font-size: .875rem; color: var(--muted); margin-bottom: .5rem; } .post-full h2 { margin-bottom: .5rem; } .body { white-space: pre-wrap; font-size: 1.05rem; margin: .75rem 0 1rem; } .reply { display: flex; gap: .75rem; background: var(--white); border: 1px solid var(--line); border-radius: 14px; padding: .8rem 1rem; margin: .6rem 0; box-shadow: var(--shadow-sm); } .reply-body { flex: 1; min-width: 0; } .reply-body p { margin: .2rem 0 .5rem; white-space: pre-wrap; } form { max-width: none; }`,
 })
 export class PostPage implements OnInit {
   private readonly api = inject(CommunitiesService);

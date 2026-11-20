@@ -29,9 +29,9 @@ Status: **Done** = built and tested, **Next** = planned before 20 Nov, **Deferre
 | 3.0 Communities and posts | `CommunityService`, `controllers/communities.py`, `frontend/.../communities` | Done (FR-020 to 025, 030 to 039; admin pages with 9.0) |
 | 4.0 Manage connections | `ConnectionService`, `controllers/connections.py` | Done |
 | 5.0 Private messages | `MessagingService`, `controllers/messaging.py`, `frontend/.../messaging` | Done (FR-050 to 052, OR-001; FR-053 and 054 with moderation) |
-| 6.0 Safety reports (DFD-1: 6.1 to 6.6) | `ModerationService` (`submit_report` 6.1, `open_queue` 6.2, `acknowledge` 6.3, `decide` 6.4, `apply_action` 6.5, `case_summary` 6.6), `controllers/moderation.py` | Done (FR-053, 054, 060 to 070; FR-070 summary on demand, DF-24 and DF-25 stay proposed) |
+| 6.0 Safety reports (DFD-1: 6.1 to 6.6) | `ModerationService` (`submit_report` 6.1, `open_queue` 6.2, `acknowledge` 6.3, `decide` 6.4 with the DF-23 escalation choice, `apply_action` 6.5, `case_summary` 6.6), `controllers/moderation.py` | Done (FR-053, 054, 060 to 070; DF-24 returned with an escalated decision or on demand; DF-25 recorded as a later note) |
 | 7.0 Notifications | `NotificationService`, `EmailGateway` | Done |
-| 8.0 Pilot measures | `PilotService`, `controllers/onboarding.py`, `OnboardingQuestionCard` | Done (FR-090 to 094) |
+| 8.0 Pilot measures | `PilotMeasuresService`, `controllers/onboarding.py`, `controllers/admin.py` (report), `OnboardingQuestion` | Done (FR-090 to 094) |
 | 9.0 Administer system | `AdminService`, `controllers/admin.py`, `frontend/.../admin` | Done (FR-100 to 104) |
 
 ## Classes and operations (CD-1a) and SD-1
@@ -58,12 +58,17 @@ Controllers are Flask routes under `/api` (`docs/api.md`). `ConnectionController
 
 See also `requirements-coverage.md` (requirement to code and tests), `test-report.md` and `deferred-requirements.md`.
 
-## M3 names that differ in the code
+## M3 names and where they are in the code (aligned 20 November 2026)
 
 | M3 name | In the code |
 |---|---|
-| `AuditRecord` | table `audit_records`, written through `AuditLog.record()` |
-| `SystemSetting` | table `settings`, read through `SettingsProvider` and named by the `SettingName` enum |
-| `PostKind`, `CommunityKind`, `ContentStatus`, `ContactRange` | plain value lists and strings (`POST_KINDS`, `kind`, `status`, `ANSWERS`) |
-| `AuthService.mayAccess()` | the `login_required`, `profile_required` and `role_required` decorators in `security.py` |
-| `PilotMeasuresService` | `PilotService` |
+| `AuditRecord` | `models/pilot.py` `AuditRecord` (at, actor, action, item_ref, detail); table `audit_records`; written through `AuditLog.record()` |
+| `SystemSetting` | `models/pilot.py` `SystemSetting`; returned by `SettingsProvider.all()`; table `settings` |
+| `PostKind`, `CommunityKind`, `ContentStatus`, `ContactRange`, `HandoffResult` | `models/enums.py` |
+| `ItemRef` | `models/entities.py`; the type of `Notification.related_item`, `AuditRecord.item_ref` and the `may_access()` argument |
+| `AuthService.mayAccess()` | `AuthService.may_access(account, item)`; called by `page_required()` and `may_access()` in `security.py` |
+| `ConnectionController.respond()` | `POST /api/connections/{id}/respond` with `{accept: true|false}` |
+| `NotificationService.notify(recipient, type, item)` | `notify(recipient_id, event, body, item)` |
+| `EmailMessage.notificationId`, `StubEmailGateway.sentMessages()` | `notification_id`, `sent_messages()` |
+| `PilotMeasuresService` | `PilotMeasuresService` (service name `"pilot"`) |
+| DF-23 escalation choice, DF-36, DF-24 | `ModerationService.decide(..., escalate=True)` returns the case summary |

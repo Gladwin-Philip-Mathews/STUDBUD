@@ -2,6 +2,7 @@
 from datetime import datetime, timedelta, timezone
 
 from .models.enums import SettingName
+from .models.pilot import SystemSetting
 
 DEFAULTS = {
     SettingName.VERIFICATION_LINK_LIFE: 24,
@@ -51,8 +52,15 @@ class SettingsProvider:
         return DEFAULTS[name]
 
     def all(self) -> list:
-        """Every setting with its value and unit, for the administration page (FR-104)."""
-        return [{"name": n.value, "value": self.get(n), "unit": UNITS.get(n, "count")} for n in SettingName]
+        """Every setting as a SystemSetting (CD-1a), for the administration page (FR-104)."""
+        changed = {r["name"]: r for r in self.conn.execute("SELECT name, changed_at, changed_by FROM settings")}
+        out = []
+        for n in SettingName:
+            row = changed.get(n.value)
+            out.append(SystemSetting(n.value, self.get(n), UNITS.get(n, "count"),
+                                     datetime.fromisoformat(row["changed_at"]) if row and row["changed_at"] else None,
+                                     row["changed_by"] if row else None))
+        return out
 
     def set(self, name, value: int, changed_by=None) -> None:
         # DR-014: a name outside the NFR-012 list cannot be stored

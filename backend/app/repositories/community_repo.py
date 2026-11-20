@@ -1,6 +1,6 @@
 """Repositories for communities (D4) and posts and replies (D5)."""
 from abc import ABC, abstractmethod
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 
 from ..models.content import Community, Post, Reply
@@ -58,6 +58,9 @@ class PostRepository(ABC):
     def replies_for(self, post_id: int) -> list: ...
     @abstractmethod
     def page(self, community_ids: list, kind: Optional[str], page: int, viewer_id: int, words: Optional[list] = None): ...
+    @abstractmethod
+    def find_same_post_since(self, author_id: int, community_id: int, kind: str, title: str, body: str, since):
+        """The author's identical post in this community created at or after `since`, or None (NFR-008)."""
 
 
 class SqliteCommunityRepository(CommunityRepository):
@@ -67,11 +70,12 @@ class SqliteCommunityRepository(CommunityRepository):
     def _row(self, r):
         n = self.conn.execute("SELECT COUNT(*) c FROM community_members WHERE community_id=?", (r["id"],)).fetchone()["c"]
         return Community(name=r["name"], kind=r["kind"], course_code=r["course_code"], status=r["status"],
-                         member_count=n, id=r["id"])
+                         member_count=n, created_at=_dt(r["created_at"]), id=r["id"])
 
     def add(self, c):
-        cur = self.conn.execute("INSERT INTO communities(name, kind, course_code, status) VALUES (?,?,?,?)",
-                                (c.name, c.kind, c.course_code, c.status))
+        c.created_at = c.created_at or datetime.now(timezone.utc)
+        cur = self.conn.execute("INSERT INTO communities(name, kind, course_code, status, created_at) VALUES (?,?,?,?,?)",
+                                (c.name, c.kind, c.course_code, c.status, _s(c.created_at)))
         self.conn.commit()
         c.id = cur.lastrowid
         return c
@@ -144,6 +148,13 @@ class SqlitePostRepository(PostRepository):
 
     def get_post(self, post_id):
         r = self.conn.execute("SELECT * FROM posts WHERE id=?", (post_id,)).fetchone()
+        return self._post(r) if r else None
+
+    def find_same_post_since(self, author_id, community_id, kind, title, body, since):
+        r = self.conn.execute(
+            "SELECT * FROM posts WHERE author_id=? AND community_id=? AND kind=? AND title=? AND body=? "
+            "AND status != 'deleted' AND created_at >= ? ORDER BY id DESC LIMIT 1",
+            (author_id, community_id, kind, title, body, _s(since))).fetchone()
         return self._post(r) if r else None
 
     def save_post(self, p):

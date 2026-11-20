@@ -7,22 +7,24 @@ import { AuthService } from './auth.service';
   selector: 'app-register',
   imports: [FormsModule, RouterLink],
   template: `
+    <div class="auth-card card">
     <h2>Create your account</h2>
+    <p class="lead">Use your RIT email. We will send you a link to confirm it.</p>
     <form (ngSubmit)="submit()" #f="ngForm" novalidate>
       <label>RIT email
-        <input name="email" type="email" [(ngModel)]="email" autocomplete="email" />
+        <input name="email" type="email" [(ngModel)]="email" autocomplete="email" [attr.aria-invalid]="errors()['email'] ? true : null" [attr.aria-describedby]="errors()['email'] ? 'email-error' : null" />
       </label>
-      @if (errors()['email']) { <p class="error" id="email-error">{{ errors()['email'] }}</p> }
+      @if (errors()['email']) { <p class="error" id="email-error" role="alert">{{ errors()['email'] }}</p> }
 
       <label>Display name
-        <input name="displayName" [(ngModel)]="displayName" />
+        <input name="displayName" [(ngModel)]="displayName" [attr.aria-invalid]="errors()['displayName'] ? true : null" [attr.aria-describedby]="errors()['displayName'] ? 'name-error' : null" />
       </label>
-      @if (errors()['displayName']) { <p class="error" id="name-error">{{ errors()['displayName'] }}</p> }
+      @if (errors()['displayName']) { <p class="error" id="name-error" role="alert">{{ errors()['displayName'] }}</p> }
 
       <label>Password
-        <input name="password" type="password" [(ngModel)]="password" autocomplete="new-password" />
+        <input name="password" type="password" [(ngModel)]="password" autocomplete="new-password" [attr.aria-invalid]="errors()['password'] ? true : null" [attr.aria-describedby]="errors()['password'] ? 'password-error' : null" />
       </label>
-      @if (errors()['password']) { <p class="error" id="password-error">{{ errors()['password'] }}</p> }
+      @if (errors()['password']) { <p class="error" id="password-error" role="alert">{{ errors()['password'] }}</p> }
 
       <section class="notice-box" id="conduct-notice">
         <p><strong>Conduct and privacy notice</strong></p>
@@ -30,13 +32,15 @@ import { AuthService } from './auth.service';
         <p>StudBud stores your RIT email, display name, profile, posts, messages and connections. Other students see only your display name, interests, courses and connection intent. Moderators can read a message only through a safety report. Nothing is shared with outside parties.</p>
       </section>
       <label class="check"><input name="acceptNotice" type="checkbox" [(ngModel)]="acceptNotice" /> I accept this notice</label>
-      @if (errors()['acceptNotice']) { <p class="error" id="notice-error">{{ errors()['acceptNotice'] }}</p> }
+      @if (errors()['acceptNotice']) { <p class="error" id="notice-error" role="alert">{{ errors()['acceptNotice'] }}</p> }
 
       <button type="submit" [disabled]="busy()">Register</button>
     </form>
-    @if (message()) { <p class="notice" id="register-message">{{ message() }}</p> }
+    @if (message()) { <p class="notice" id="register-message" role="status">{{ message() }}</p> }
     <p>Already registered? <a routerLink="/sign-in">Sign in</a></p>
+    </div>
   `,
+  styles: `.auth-card { max-width: 34rem; margin: 1rem auto; } form { max-width: none; margin-top: 1rem; }`,
 })
 export class Register {
   private readonly auth = inject(AuthService);

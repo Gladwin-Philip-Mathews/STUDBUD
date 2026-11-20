@@ -2,8 +2,7 @@
 from flask import Blueprint, g, jsonify, request
 
 from ..container import get_service
-from ..models.enums import Role
-from ..security import profile_required, role_required
+from ..security import page_required, profile_required
 
 bp = Blueprint("moderation", __name__, url_prefix="/api")
 
@@ -37,40 +36,51 @@ def _queue_json(q):
 
 
 @bp.get("/moderation/queue")
-@role_required(Role.MODERATOR)
+@page_required("moderation")
 def queue():
     return jsonify({"reports": [_queue_json(q) for q in _svc().open_queue(g.account.id)]})
 
 
 @bp.post("/moderation/reports/<int:report_id>/acknowledge")
-@role_required(Role.MODERATOR)
+@page_required("moderation")
 def acknowledge(report_id):
     result = _svc().acknowledge(g.account.id, report_id)
     return (jsonify({"message": "Acknowledged."}), 200) if result.ok else _failed(result)
 
 
 @bp.post("/moderation/reports/<int:report_id>/decision")
-@role_required(Role.MODERATOR)
+@page_required("moderation")
 def decide(report_id):
     d = request.get_json(silent=True) or {}
-    result = _svc().decide(g.account.id, report_id, d.get("decision"), d.get("action"), d.get("note"))
-    return (jsonify({"message": "Decision recorded."}), 201) if result.ok else _failed(result)
+    result = _svc().decide(g.account.id, report_id, d.get("decision"), d.get("action"), d.get("note"),
+                           escalate=bool(d.get("escalate", False)))
+    if not result.ok:
+        return _failed(result)
+    out = {"message": "Decision recorded."}
+    if result.case_summary is not None:  # DF-24: ready for the Office of Student Affairs
+        out["message"] = "Decision recorded. The case summary for Student Affairs is ready."
+        out["caseSummary"] = _summary_json(result.case_summary)
+    return jsonify(out), 201
 
 
 @bp.post("/moderation/reports/<int:report_id>/notes")
-@role_required(Role.MODERATOR)
+@page_required("moderation")
 def add_note(report_id):
     result = _svc().add_later_note(g.account.id, report_id, (request.get_json(silent=True) or {}).get("note"))
     return (jsonify({"message": "Note added."}), 201) if result.ok else _failed(result)
 
 
 @bp.get("/moderation/reports/<int:report_id>/summary")
-@role_required(Role.MODERATOR)
+@page_required("moderation")
 def summary(report_id):
     result = _svc().case_summary(g.account.id, report_id)
     if not result.ok:
         return _failed(result)
-    s = dict(result.item)
+    return jsonify({"summary": _summary_json(result.item)})
+
+
+def _summary_json(item):
+    s = dict(item)
     for key in ("receivedAt", "acknowledgedAt", "decidedAt"):
         s[key] = s[key].isoformat() if s[key] else None
-    return jsonify({"summary": s})
+    return s

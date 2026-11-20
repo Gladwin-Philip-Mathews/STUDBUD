@@ -2,7 +2,7 @@
 from datetime import datetime, timezone
 from typing import Optional
 
-from ..models.entities import Account, Connection, Course, Notification, Profile, VerificationToken
+from ..models.entities import Account, Connection, Course, ItemRef, Notification, Profile, VerificationToken
 from ..models.enums import AccountStatus, ConnectionStatus, EmailStatus, EventType, Role
 from .interfaces import (
     AccountRepository, ConnectionRepository, CourseRepository, NotificationRepository,
@@ -255,14 +255,16 @@ class SqliteNotificationRepository(NotificationRepository):
     def _row(r):
         return Notification(id=r["id"], recipient_id=r["recipient_id"], event_type=EventType(r["event_type"]),
                             body=r["body"], created_at=_dt(r["created_at"]), read_at=_dt(r["read_at"]),
-                            email_status=EmailStatus(r["email_status"]), email_resends=r["email_resends"])
+                            email_status=EmailStatus(r["email_status"]), email_resends=r["email_resends"],
+                            related_item=ItemRef.parse(r["related_item"]))
 
     def add(self, n: Notification):
         n.created_at = n.created_at or _now()
         cur = self.conn.execute(
-            "INSERT INTO notifications(recipient_id, event_type, body, created_at, email_status, email_resends) "
-            "VALUES (?,?,?,?,?,?)",
-            (n.recipient_id, n.event_type.value, n.body, _s(n.created_at), n.email_status.value, n.email_resends))
+            "INSERT INTO notifications(recipient_id, event_type, body, created_at, email_status, email_resends, "
+            "related_item) VALUES (?,?,?,?,?,?,?)",
+            (n.recipient_id, n.event_type.value, n.body, _s(n.created_at), n.email_status.value, n.email_resends,
+             str(n.related_item) if n.related_item else None))
         n.id = cur.lastrowid
         self.conn.commit()
         return n
@@ -286,7 +288,8 @@ class SqliteNotificationRepository(NotificationRepository):
 
     def pending_email(self):
         rows = self.conn.execute(
-            "SELECT * FROM notifications WHERE email_status IN ('not sent', 'returned') AND email_resends <= 3 ORDER BY id"
+            "SELECT * FROM notifications WHERE email_status = 'not sent' "
+            "OR (email_status = 'returned' AND email_resends < 3) ORDER BY id"
         ).fetchall()
         return [self._row(r) for r in rows]
 

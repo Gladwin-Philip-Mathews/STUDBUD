@@ -20,6 +20,24 @@ describe('ModerationService', () => {
     req.flush({ message: 'Thank you.' });
   });
 
+  it('sends the escalation choice with an upheld decision and returns the case summary (DF-23, DF-24)', () => {
+    let data: Record<string, unknown> | undefined;
+    svc.decide(3, 'upheld', 'warning', 'Reviewed.', true).subscribe((r) => (data = r.data));
+    const req = http.expectOne('/api/moderation/reports/3/decision');
+    expect(req.request.body).toEqual({ decision: 'upheld', action: 'warning', note: 'Reviewed.', escalate: true });
+    req.flush({ message: 'Decision recorded.', caseSummary: { reportId: 3, decision: 'upheld' } });
+    expect(data?.['reportId']).toBe(3);
+  });
+
+  it('records a later note on a closed report (DF-25, FR-067)', () => {
+    let ok = false;
+    svc.addNote(3, 'Student Affairs confirmed the warning.').subscribe((r) => (ok = r.ok));
+    const req = http.expectOne('/api/moderation/reports/3/notes');
+    expect(req.request.body).toEqual({ note: 'Student Affairs confirmed the warning.' });
+    req.flush({ message: 'Note added.' }, { status: 201, statusText: 'Created' });
+    expect(ok).toBeTrue();
+  });
+
   it('returns the named problem when a decision is incomplete (FR-064)', () => {
     let errors: Record<string, string> | undefined;
     svc.decide(3, 'upheld', 'warning', '').subscribe((r) => (errors = r.errors));

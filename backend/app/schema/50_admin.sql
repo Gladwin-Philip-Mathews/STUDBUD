@@ -17,3 +17,11 @@ CREATE TABLE IF NOT EXISTS request_timings (
   requester_cohort TEXT,
   requester_intent TEXT
 );
+-- Interest suggestions: a student proposes a community name; the administrator creates it or dismisses it (FR-102).
+CREATE TABLE IF NOT EXISTS interest_suggestions (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL,
+  suggested_by INTEGER REFERENCES accounts(id) ON DELETE SET NULL,
+  suggested_at TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'open' CHECK (status IN ('open', 'created', 'dismissed'))
+);

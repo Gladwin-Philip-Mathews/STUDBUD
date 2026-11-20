@@ -76,6 +76,19 @@ def decline(connection_id):
     return _answer("decline")
 
 
+@bp.post("/<int:connection_id>/respond")
+@profile_required
+def respond(connection_id):
+    """CD-1b ConnectionController.respond(session, connectionId, accept): one route for accept and decline."""
+    accept = (request.get_json(silent=True) or {}).get("accept")
+    if not isinstance(accept, bool):
+        return jsonify({"message": "Send accept as true or false."}), 400
+    c = get_service("connections").respond(connection_id, g.account.id, accept)
+    if c is None:
+        return jsonify({"message": "Not found."}), 404
+    return jsonify({"connection": connection_json(c), "message": "Accepted." if accept else "Not accepted."})
+
+
 @bp.post("/<int:connection_id>/withdraw")
 @profile_required
 def withdraw(connection_id):

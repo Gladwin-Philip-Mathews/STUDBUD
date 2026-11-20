@@ -5,10 +5,11 @@ import { filter } from 'rxjs';
 import { AuthService } from './auth/auth.service';
 import { NotificationsService } from './notifications/notifications.service';
 import { OnboardingQuestionCard } from './profiles/onboarding-question';
+import { Avatar } from './shared/avatar';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, OnboardingQuestionCard],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, OnboardingQuestionCard, Avatar],
   templateUrl: './app.html',
   styleUrl: './app.scss'
 })

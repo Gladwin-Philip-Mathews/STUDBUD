@@ -8,9 +8,8 @@ from typing import Callable, Optional
 
 from ..container import service
 from ..email_gateway import EmailGateway, EmailMessage
-from ..models import Notification
-from ..models.entities import MAX_EMAIL_RESENDS
-from ..models.enums import EmailStatus, EventType
+from ..models import ItemRef, Notification
+from ..models.enums import EmailStatus, EventType, HandoffResult
 
 SUBJECTS = {
     EventType.REPLY_ADDED: "New reply to your post",
@@ -32,31 +31,40 @@ class NotificationService:
         self.notifications, self.accounts, self.gateway = notifications, accounts, gateway
         self.clock, self.on_email_pending = clock, on_email_pending
 
-    def notify(self, recipient_id: int, event: EventType, body: str) -> Notification:
-        """Always creates the in-app notification. The email is handed over later, after the response (DD-04)."""
-        n = self.notifications.add(Notification(recipient_id, event, body, created_at=self.clock()))
+    def notify(self, recipient_id: int, event: EventType, body: str, item: Optional[ItemRef] = None) -> Notification:
+        """CD-1b notify(recipient, type, item): always creates the in-app notification, with the item the event is
+        about (DR-011). The email is handed over later, after the response (DD-04, SD-1 M20 to M23)."""
+        n = self.notifications.add(Notification(recipient_id, event, body, created_at=self.clock(), related_item=item))
         if self.on_email_pending:
             self.on_email_pending()
         return n
 
     # ---- email, run after the response has been sent ----
     def dispatch_email(self, n: Notification) -> bool:
-        """SD-1 M26 to M31: build the email and hand it to the gateway; store the handoff status."""
+        """SD-1 M26 to M31: build the email and hand it to the gateway; store the handoff status.
+
+        Route available (M27 to M29): status becomes "handed over". Route unavailable (M30, M31): the status stays
+        "not sent" and the handoff is tried again on the next dispatch; nothing counts as a resend, because no
+        message reached the mail route. A *returned* message (DF-29) is the only thing FR-084 limits to three resends.
+        """
         account = self.accounts.get(n.recipient_id)
         if account is None or not account.email_notifications:
             return False  # FR-082: email switched off, in-app notification stays
         is_resend = n.email_status == EmailStatus.RETURNED
-        if is_resend:
-            if not n.can_resend():
-                return False
-            n.email_resends += 1
-        ok = self.gateway.send(EmailMessage(account.email, SUBJECTS[n.event_type], n.body))
-        n.email_status = EmailStatus.HANDED_OVER if ok else EmailStatus.RETURNED
-        self.notifications.save(n)
-        return bool(ok)
+        if is_resend and not n.can_resend():
+            return False
+        result = self.gateway.send(EmailMessage(account.email, SUBJECTS[n.event_type], n.body, notification_id=n.id))
+        if result == HandoffResult.HANDED_OVER:
+            if is_resend:
+                n.email_resends += 1  # a resend is a returned message handed over again (AC-FR-084a)
+            n.email_status = EmailStatus.HANDED_OVER
+            self.notifications.save(n)
+            return True
+        return False  # UNAVAILABLE: status unchanged ("not sent" or "returned"), retried next time
 
     def dispatch_pending(self) -> int:
-        """Hand over each unsent or returned email. At most 3 resends, so at most 4 handoffs (CH-15, AC-FR-084a)."""
+        """Hand over each unsent or returned email. A returned email is resent at most 3 times, so at most 4 handoffs
+        reach the mail route for one notification (CH-15, AC-FR-084a)."""
         return sum(1 for n in self.notifications.pending_email() if self.dispatch_email(n))
 
     def on_delivery_status(self, notification_id: int, status: EmailStatus) -> None:
@@ -68,7 +76,7 @@ class NotificationService:
             n.email_status = EmailStatus.RETURNED
             self.notifications.save(n)
             if n.can_resend():
-                self.dispatch_email(n)  # M34
+                self.dispatch_email(n)  # M34: resend; after the third resend the status returned stays (M35)
         else:
             n.email_status = EmailStatus.HANDED_OVER
             self.notifications.save(n)

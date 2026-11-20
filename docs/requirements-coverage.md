@@ -128,3 +128,25 @@ Generated from the requirement IDs cited in code comments and test names, then c
 | OR-001 | `repositories/message_repo.py`, `repositories/report_repo.py` (+3) | `test_retention_deletes_old_messages_but_keeps_protected_ones`, `test_retention_keeps_messages_named_in_open_reports` |  |
 | OR-002 | `settings.py` | none cited | Log retention setting; value tested, scheduled clean-up not built. |
 | OR-003 | `db.py`, `models/entities.py` (+1) | `test_registration_needs_the_notice_accepted_and_records_when` |  |
+
+
+## Added by the implementation review of 20 November 2026
+
+These IDs were not in the tables above. See `docs/REVIEW.md` for the finding behind each row.
+
+| ID | Code | Tests | Note |
+|---|---|---|---|
+| IF-006 | `__init__.py` (FORCE_HTTPS redirect, HSTS, Secure cookie) | `test_plain_http_is_redirected_and_returns_no_content_when_https_is_enforced`, `test_https_mode_refuses_a_placeholder_secret_key` | Off on a laptop, on with `FORCE_HTTPS=1` on the pilot server. |
+| NFR-010 | `email_gateway/gateway.py` (`tls_context`) | `test_email_route_requires_tls_1_2_or_later` | Browser leg is IF-006; the certificate itself is a hosting matter (Q-04). |
+| NFR-008 | `__init__.py` (error handlers), `services/community_service.py` (repeat window) | `test_failures_show_a_plain_message_without_technical_details`, `test_a_repeated_post_submission_creates_one_post` | |
+| DR-007 | `schema/00_core.sql` (`one_open_connection_per_pair`) | `test_two_open_connections_for_one_pair_cannot_be_stored` | Was enforced in the service only. |
+| DR-009 | `schema/40_moderation.sql` (`reports_reason_check`) | `test_a_report_reason_outside_the_list_cannot_be_stored` | |
+| DR-011 | `schema/00_core.sql` (`notifications_event_type_check`) | `test_a_notification_with_an_unknown_event_type_cannot_be_stored` | |
+| OR-001 | `services/retention_service.py`, `controllers/admin.py`, CLI `clean-up` | `test_clean_up_applies_message_retention_through_the_same_run` | The rule existed but nothing ran it. |
+| OR-002 | `services/retention_service.py`, `repositories/report_repo.py`, `services/audit_log.py` | `test_clean_up_deletes_conduct_records_older_than_the_retention_setting`, `test_clean_up_never_deletes_an_open_report` | Append-only triggers stand down only inside the clean-up transaction (FR-067 kept for every role). |
+| NFR-019 | Angular templates (aria-label on every unlabeled control, role="alert" / "status" on messages) | none (checked by hand) | Automated checker and screen-reader run still to do (AC-NFR-019a). |
+| CON-002 | `__init__.py` (Referrer-Policy), `frontend/src/index.html` | none (inspection) | No third-party script, font or tracker is loaded. |
+| DR-011 (related item) | `models/entities.py` `Notification.related_item`, `ItemRef` | `test_every_notification_names_the_item_it_is_about` | Added on the diagram alignment pass; the event type rule is the trigger above. |
+| NFR-013 (one access check) | `services/auth_service.py` `may_access`, `security.py` `page_required` | `test_may_access_refuses_another_students_conversation_notification_and_the_moderator_page` | AC-NFR-013a as written: conversation of B and C, notification of B, moderator page. |
+| FR-082 (via 2.0) | `controllers/profile.py` | `test_email_choice_is_part_of_the_profile` | DF-06. |
+| FR-070 (escalation) | `services/moderation_service.py` `decide(escalate=True)` | `test_upheld_decision_with_the_escalation_choice_returns_the_case_summary` | DF-23, DF-36, DF-24. |
