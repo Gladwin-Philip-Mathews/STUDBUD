@@ -44,4 +44,12 @@ describe('ModerationService', () => {
     http.expectOne('/api/moderation/reports/3/decision').flush({ errors: { note: 'Write a note.' } }, { status: 400, statusText: 'Bad Request' });
     expect(errors?.['note']).toBeTruthy();
   });
+
+  it('loads the reported post, its thread and the student history for a moderator (FR-064)', () => {
+    let title = '';
+    svc.context(4).subscribe((c) => (title = c?.thread?.post.title ?? ''));
+    http.expectOne('/api/moderation/reports/4/context').flush({ context: { reportId: 4, reportedStudent: 'Bo', history: [],
+      thread: { post: { id: 1, community: 'SWEN-261', kind: 'share', title: 'A post', text: 't', status: 'visible', author: 'Bo', createdAt: '2026-11-20T10:00', edited: false, reported: true }, replies: [] } } });
+    expect(title).toBe('A post');
+  });
 });

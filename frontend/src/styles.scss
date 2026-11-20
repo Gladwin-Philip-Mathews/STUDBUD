@@ -140,5 +140,5 @@ small.notice { color: var(--muted); font-weight: 400; }
 .stat { background: var(--white); border: 1px solid var(--line); border-radius: var(--radius); padding: var(--space-3) var(--space-4); box-shadow: var(--shadow-sm); }
 .stat strong { display: block; font-size: 1.75rem; line-height: 1.1; }
 .stat span { color: var(--muted); font-size: .875rem; }
-.report { border-color: transparent; background: none; color: var(--muted); font-size: .8rem; font-weight: 500; text-decoration: underline; padding: 0 .3rem; }
-.report:hover { background: none; color: var(--danger); box-shadow: none; }
+button.report { border-color: transparent; background: none; color: var(--muted); font-size: .8rem; font-weight: 500; text-decoration: underline; padding: 0 .3rem; }
+button.report:hover { background: none; color: var(--danger); box-shadow: none; }

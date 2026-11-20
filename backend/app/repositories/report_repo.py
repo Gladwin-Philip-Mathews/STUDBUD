@@ -23,6 +23,9 @@ class ReportRepository(ABC):
     def find_open(self) -> list:
         """Reports without an outcome, oldest first (CD-1a findOpen)."""
     @abstractmethod
+    def find_about_student(self, student_id: int) -> list:
+        """Every report about one student, oldest first: the conduct history a moderator weighs (FR-064)."""
+    @abstractmethod
     def save_outcome(self, outcome) -> None: ...
     @abstractmethod
     def get_outcome(self, report_id: int): ...
@@ -69,6 +72,10 @@ class SqliteReportRepository(ReportRepository):
     def find_open(self):
         rows = self.conn.execute(
             "SELECT * FROM safety_reports WHERE status != 'closed' ORDER BY received_at, id").fetchall()
+        return [self._row(r) for r in rows]
+
+    def find_about_student(self, student_id):
+        rows = self.conn.execute("SELECT * FROM safety_reports WHERE reported_student_id=? ORDER BY id", (student_id,)).fetchall()
         return [self._row(r) for r in rows]
 
     def save_outcome(self, o):

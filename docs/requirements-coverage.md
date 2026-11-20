@@ -150,3 +150,34 @@ These IDs were not in the tables above. See `docs/REVIEW.md` for the finding beh
 | NFR-013 (one access check) | `services/auth_service.py` `may_access`, `security.py` `page_required` | `test_may_access_refuses_another_students_conversation_notification_and_the_moderator_page` | AC-NFR-013a as written: conversation of B and C, notification of B, moderator page. |
 | FR-082 (via 2.0) | `controllers/profile.py` | `test_email_choice_is_part_of_the_profile` | DF-06. |
 | FR-070 (escalation) | `services/moderation_service.py` `decide(escalate=True)` | `test_upheld_decision_with_the_escalation_choice_returns_the_case_summary` | DF-23, DF-36, DF-24. |
+
+
+## Constraints, interfaces and qualities that no code comment names
+
+These requirements shape the product rather than one function. Each is checked here against the built system (21 November 2026).
+
+| ID | Status | How it is met or what is left |
+|---|---|---|
+| CON-001 | Met | Angular web application served over HTTP; no native client and nothing to install on the student's device. |
+| CON-003 | Met | Registration accepts only the domains in the accepted-domains list (FR-101); no other university or RIT campus. |
+| CON-004 | Met | The RIT email with a single-use link is the only proof of membership (FR-001 to FR-005); no other identity provider. |
+| CON-006 | Process | Publicity waits for Student Affairs and Marketing; the pilot runs as an invited, closed test. Nothing in the code publishes or advertises the product. |
+| CON-007 | Met | Every post, reply and message shows the verified author's display name (`author` in the post, reply and message JSON); there is no anonymous mode. |
+| CON-008 | Process | Semester and team limit; the scope in `docs/deferred-requirements.md` was kept inside it. |
+| IF-001 | Met | Pages for registration, sign in, profile, feed, communities, post, connections, conversations, notifications and report, with a navigation bar on every page after sign in; the bar scrolls sideways on a phone and the pages stack at 360 px. The settings page is the notification switch and the profile. |
+| IF-002 | Met | Field errors sit next to the field (`role="alert"`), every change confirms with a notice, and server failures return a plain message (TC-NFR-008a). |
+| IF-005, NFR-018 | Not yet run | The nine browser and device combinations still need the acceptance script. Layout was checked in desktop Chrome at 1100 px and at 375 px. |
+| DR-005, DR-006 | Met | Post and reply fields and limits (`services/community_service.py`, `schema/20_communities.sql`); test `test_post_limits_and_named_problems`. |
+| NFR-001, NFR-003 | Not yet run | Needs the 100-student load test and the capacity message. |
+| NFR-002 | Met by design | Posts, replies and messages are written to the database before the response and read from it on the next request, so they appear at once; suggestions are computed from the stored profile on each request, so a profile change shows on the next page load. |
+| NFR-005 | Met | A search over 10,000 posts took about 10 ms on a laptop (limit 2 s). |
+| NFR-006, NFR-007 | Not yet run | Depend on the host: uptime log and a daily backup with one rehearsed restore. |
+| NFR-014 | Met | Only the data of DR-001 to DR-015 is stored; retention is applied by the clean-up run (OR-001, OR-002). The interest suggestion stores a community name, the suggesting student and the time, and is removed from the open list when answered. |
+| NFR-016 | Met | Every Must requirement has an automated test (see the tables above); settings and courses change from the administration page without code changes (NFR-012, FR-100); the team reviews each pull request before merging (CONTRIBUTING.md). |
+| NFR-017 | Deferred | See `docs/deferred-requirements.md`. |
+| NFR-020 | Not yet run | Needs the usability test with five students. |
+| NFR-021 | Met | English text only, no technical terms on student pages, and each error names the next step. |
+| NFR-022 | Met | First load is about 96 kB transferred (350 kB raw), far under 1.5 MB; no third-party fonts, scripts or images. |
+| NFR-023 | Met | Nothing requires a connection request or message; a student can leave (FR-015) and switch email off (FR-082). |
+| OR-004 | Process | The invited-student list is kept by the team before the first registration. |
+| FR-016, FR-026, FR-049 | Deferred | See `docs/deferred-requirements.md`. |

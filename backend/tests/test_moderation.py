@@ -237,3 +237,24 @@ def test_retention_keeps_messages_named_in_open_reports(world, app, clock):  # O
         keep = get_service("moderation").retention_keep_ids()
         assert world["msg"] in keep
         assert get_service("messaging").apply_retention(keep) == 0
+
+
+def test_moderator_sees_the_post_its_thread_and_the_students_history(world):  # FR-064: investigate before deciding
+    w = world
+    first = report(w["c"]["Ann"], "post", w["post"]).get_json()["reportId"]
+    ack = w["c"]["Mo"].post(f"/api/moderation/reports/{first}/acknowledge")
+    assert ack.status_code == 200
+    assert decide(w, first, decision="upheld", action="warning").status_code == 201
+    second = report(w["c"]["Ann"], "reply", w["reply"]).get_json()["reportId"]
+    ctx = w["c"]["Mo"].get(f"/api/moderation/reports/{second}/context").get_json()["context"]
+    assert ctx["thread"]["post"]["title"] == "A questionable post" and "SWEN-261" in ctx["thread"]["post"]["community"]
+    assert [r["text"] for r in ctx["thread"]["replies"]] == ["a rude reply"] and ctx["thread"]["replies"][0]["reported"] is True
+    assert ctx["history"][0]["id"] == first and ctx["history"][0]["decision"] == "upheld"  # earlier outcome shown
+
+
+def test_context_for_a_message_report_shows_no_other_messages_and_students_cannot_open_it(world):  # FR-054, AC-FR-070a
+    w = world
+    rid = report(w["c"]["Ann"], "message", w["msg"]).get_json()["reportId"]
+    ctx = w["c"]["Mo"].get(f"/api/moderation/reports/{rid}/context").get_json()["context"]
+    assert ctx["thread"] is None
+    assert w["c"]["Ann"].get(f"/api/moderation/reports/{rid}/context").status_code == 403

@@ -51,6 +51,10 @@ Emails are handed over after the response is sent (DD-04). A returned email is r
 email choice of FR-082 is part of the profile details); `DELETE /api/profile` with the password deletes the account (FR-015).
 
 ## Administration (process 9.0) — administrator role only
+A moderator opens `GET /api/moderation/reports/{id}/context` to see the reported post with its community, the whole thread
+(hidden and deleted content included) and the earlier reports about the same student with their outcomes. For a message
+report only the reported message is shown.
+
 Students suggest an interest community with `POST /api/communities/suggestions` (`name`); the administrator lists them at
 `GET /api/admin/interest-suggestions` and answers with `POST /api/admin/interest-suggestions/{id}/create` or `.../dismiss`.
 Every post carries `community` (its community's name), and `GET /api/communities/{id}/posts` returns `community {id, name}`.

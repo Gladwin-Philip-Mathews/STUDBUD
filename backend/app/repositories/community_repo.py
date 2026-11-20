@@ -55,7 +55,7 @@ class PostRepository(ABC):
     @abstractmethod
     def save_reply(self, reply): ...
     @abstractmethod
-    def replies_for(self, post_id: int) -> list: ...
+    def replies_for(self, post_id: int, include_deleted: bool = False) -> list: ...
     @abstractmethod
     def page(self, community_ids: list, kind: Optional[str], page: int, viewer_id: int, words: Optional[list] = None): ...
     @abstractmethod
@@ -178,9 +178,9 @@ class SqlitePostRepository(PostRepository):
                           (rp.body, rp.status, _s(rp.edited_at), rp.id))
         self.conn.commit()
 
-    def replies_for(self, post_id):
-        rows = self.conn.execute("SELECT * FROM replies WHERE post_id=? AND status != 'deleted' ORDER BY created_at, id",
-                                 (post_id,)).fetchall()
+    def replies_for(self, post_id, include_deleted=False):
+        rows = self.conn.execute("SELECT * FROM replies WHERE post_id=? AND (status != 'deleted' OR ?) ORDER BY created_at, id",
+                                 (post_id, 1 if include_deleted else 0)).fetchall()
         return [self._reply(r) for r in rows]
 
     def page(self, community_ids, kind, page, viewer_id, words=None):
