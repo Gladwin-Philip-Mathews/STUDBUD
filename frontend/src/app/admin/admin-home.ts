@@ -22,11 +22,11 @@ import { AdminService, CourseRow, DomainRow, PilotReport, SettingRow, Status } f
 
     <h3>Courses</h3>
     <div class="bar">
-      <input name="code" placeholder="Code, e.g. SWEN-261" [(ngModel)]="code" />
-      <input name="title" placeholder="Title" [(ngModel)]="title" />
+      <input name="code" aria-label="Course code" placeholder="Code, e.g. SWEN-261" [(ngModel)]="code" />
+      <input name="title" aria-label="Course title" placeholder="Title" [(ngModel)]="title" />
       <button type="button" class="add-course" (click)="addCourse()">Add course</button>
     </div>
-    <textarea name="csv" rows="3" placeholder="Import: one course per line as code,title" [(ngModel)]="csv"></textarea>
+    <textarea name="csv" rows="3" aria-label="Course list to import, one course per line as code,title" placeholder="Import: one course per line as code,title" [(ngModel)]="csv"></textarea>
     <button type="button" (click)="importCourses()">Import list</button>
     @for (c of courses(); track c.code) {
       <div class="row">{{ c.code }} {{ c.title }} <small>({{ c.status }})</small>
@@ -35,18 +35,18 @@ import { AdminService, CourseRow, DomainRow, PilotReport, SettingRow, Status } f
     }
 
     <h3>Accepted email domains</h3>
-    <input name="domain" placeholder="g.rit.edu" [(ngModel)]="domain" />
+    <input name="domain" aria-label="Email domain to accept" placeholder="g.rit.edu" [(ngModel)]="domain" />
     <button type="button" (click)="addDomain()">Add domain</button>
     @for (d of domains(); track d.domain) {
       <div class="row">{{ d.domain }} <button type="button" (click)="removeDomain(d.domain)">Remove</button></div>
     }
 
     <h3>Interest communities</h3>
-    <input name="community" placeholder="Name (3 to 50 characters)" [(ngModel)]="community" />
+    <input name="community" aria-label="Name of the new interest community" placeholder="Name (3 to 50 characters)" [(ngModel)]="community" />
     <button type="button" (click)="createCommunity()">Create community</button>
 
     <h3>Moderators</h3>
-    <input name="email" placeholder="Student email" [(ngModel)]="email" />
+    <input name="email" aria-label="Email of the student to make or remove as moderator" placeholder="Student email" [(ngModel)]="email" />
     <button type="button" (click)="setModerator(true)">Make moderator</button>
     <button type="button" (click)="setModerator(false)">Remove role</button>
     @for (m of moderators(); track m.id) { <div class="row">{{ m.displayName }} ({{ m.email }})</div> }

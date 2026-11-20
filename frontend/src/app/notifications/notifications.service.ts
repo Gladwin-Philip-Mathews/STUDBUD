@@ -8,6 +8,8 @@ export interface AppNotification {
   body: string;
   createdAt: string;
   read: boolean;
+  /** DR-011: the post, connection, conversation or report the event is about. */
+  item: { type: string; id: number } | null;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -21,10 +23,20 @@ export class NotificationsService {
       .subscribe((r) => this.unread.set(r.unread));
   }
 
-  list(): Observable<{ notifications: AppNotification[]; unread: number }> {
-    return this.http.get<{ notifications: AppNotification[]; unread: number }>('/api/notifications').pipe(
+  list(): Observable<{ notifications: AppNotification[]; unread: number; email?: boolean }> {
+    return this.http.get<{ notifications: AppNotification[]; unread: number; email?: boolean }>('/api/notifications').pipe(
       tap((r) => this.unread.set(r.unread))
     );
+  }
+
+  /** Where a notification leads (DF-27 → the item of DR-011). */
+  linkFor(n: AppNotification): string[] | null {
+    switch (n.item?.type) {
+      case 'post': return ['/communities', 'post', String(n.item.id)];
+      case 'connection': return ['/connections'];
+      case 'conversation': return ['/messaging'];
+      default: return null;
+    }
   }
 
   markRead(id: number): Observable<unknown> {

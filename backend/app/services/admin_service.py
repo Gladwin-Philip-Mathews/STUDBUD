@@ -180,7 +180,7 @@ class AdminService:
 
     # ---- settings (FR-104, DR-014) ----
     def list_settings(self) -> list:
-        return self.settings.all()
+        return [x.as_dict() for x in self.settings.all()]
 
     def update_setting(self, admin_id: int, name, value) -> AdminResult:
         if name not in {n.value for n in SettingName}:
@@ -189,7 +189,7 @@ class AdminService:
             return AdminResult(errors={"value": "Enter a whole number from 1 to 10000."})
         self.settings.set(name, value, changed_by=admin_id)  # applies to new events at once
         self.audit.record(admin_id, "SETTING_CHANGED", name, str(value))
-        return AdminResult(item=self.settings.all())
+        return AdminResult(item=self.list_settings())
 
     # ---- system status (FR-103) ----
     def status(self) -> dict:

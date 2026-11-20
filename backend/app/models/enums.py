@@ -47,6 +47,18 @@ class EmailStatus(str, Enum):
     RETURNED = "returned"
 
 
+class HandoffResult(str, Enum):
+    """CD-1b EmailGateway.send() result. HANDED_OVER: the mail route accepted the message (SD-1 M27 to M29).
+    UNAVAILABLE: the route could not be reached; the email status stays "not sent" and the handoff is retried
+    (SD-1 M30, M31). A message the route later reports back as undelivered is a *delivery status* (DF-29,
+    EmailStatus.RETURNED), which is what FR-084 limits to three resends."""
+    HANDED_OVER = "handed over"
+    UNAVAILABLE = "unavailable"
+
+    def __bool__(self) -> bool:  # `if gateway.send(message):` reads as "was it handed over"
+        return self is HandoffResult.HANDED_OVER
+
+
 class SettingName(str, Enum):
     VERIFICATION_LINK_LIFE = "VERIFICATION_LINK_LIFE"  # hours
     RESEND_LIMIT = "RESEND_LIMIT"  # per hour
@@ -77,6 +89,31 @@ class Cohort(str, Enum):  # DR-002: used only for pilot reporting, never shown t
 class RecordStatus(str, Enum):  # DR-003
     ACTIVE = "active"
     ARCHIVED = "archived"
+
+
+class CommunityKind(str, Enum):  # DR-004
+    COURSE = "course"
+    INTEREST = "interest"
+
+
+class PostKind(str, Enum):  # DR-005
+    QUESTION = "question"
+    SHARE = "share"
+    STUDY_PARTNER_REQUEST = "study partner request"
+
+
+class ContentStatus(str, Enum):  # DR-005, DR-006, DR-008 (Message uses visible and hidden only)
+    VISIBLE = "visible"
+    HIDDEN = "hidden"
+    DELETED = "deleted"
+
+
+class ContactRange(str, Enum):  # DR-012: the onboarding answer of FR-090
+    NONE = "0"
+    ONE_TO_TWO = "1 to 2"
+    THREE_TO_FIVE = "3 to 5"
+    MORE_THAN_FIVE = "more than 5"
+    SKIPPED = "skipped"
 
 
 class ReportReason(str, Enum):  # DR-009

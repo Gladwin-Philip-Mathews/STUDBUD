@@ -199,7 +199,7 @@ def test_moderator_sees_message_text_only_through_a_report_and_each_access_is_lo
     queue(world)  # opened again: logged again
     with app.app_context():
         entries = get_service("audit").entries("MESSAGE_ACCESS")
-    assert len(entries) == 2 and f"report {rid}" in entries[0]["detail"]
+    assert len(entries) == 2 and entries[0].item_ref == f"report {rid}" and "message" in entries[0].detail
 
 
 def test_decision_is_written_to_the_audit_record(world, app):  # NFR-015

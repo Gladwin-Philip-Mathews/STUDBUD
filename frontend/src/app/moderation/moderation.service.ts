@@ -48,9 +48,20 @@ export class ModerationService {
   acknowledge(id: number): Observable<Outcome> {
     return this.http.post(`/api/moderation/reports/${id}/acknowledge`, {}).pipe(map(() => ({ ok: true })), catchError((e) => of(failed(e))));
   }
-  decide(id: number, decision: string, action: string, note: string): Observable<Outcome> {
-    return this.http.post(`/api/moderation/reports/${id}/decision`, { decision, action, note }).pipe(
-      map(() => ({ ok: true })),
+  /** DF-23: decision + action + note + (escalation choice, upheld only). With the choice, the case summary for
+   *  Student Affairs (DF-24) comes back with the outcome. */
+  decide(id: number, decision: string, action: string, note: string, escalate = false): Observable<Outcome> {
+    return this.http
+      .post<{ message: string; caseSummary?: Record<string, unknown> }>(`/api/moderation/reports/${id}/decision`, { decision, action, note, escalate })
+      .pipe(
+        map((r) => ({ ok: true, message: r.message, data: r.caseSummary })),
+        catchError((e) => of(failed(e)))
+      );
+  }
+  /** DF-25: a conduct decision returned by Student Affairs is recorded as a dated later note (FR-067). */
+  addNote(id: number, note: string): Observable<Outcome> {
+    return this.http.post<{ message: string }>(`/api/moderation/reports/${id}/notes`, { note }).pipe(
+      map((r) => ({ ok: true, message: r.message })),
       catchError((e) => of(failed(e)))
     );
   }

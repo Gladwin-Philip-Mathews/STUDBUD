@@ -1,7 +1,7 @@
 """Entity classes from CD-1a (M3 Section 3). Rules that need other objects live in services."""
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from typing import Optional
+from typing import Optional, Union
 
 from .enums import AccountStatus, ConnectionStatus, EmailStatus, EventType, Role
 
@@ -120,6 +120,26 @@ class Connection:
     def remove(self, now): self._set(ConnectionStatus.REMOVED, now)
 
 
+@dataclass(frozen=True)
+class ItemRef:
+    """CD-1b ItemRef: a reference to the item an event, access check or audit entry is about, e.g. ("post", 12),
+    ("report", 3) or a page ("page", "moderation"). Stored as the text "post:12" (DR-011 related item, DR-015)."""
+    kind: str
+    id: Union[int, str, None] = None
+
+    def __str__(self) -> str:
+        return self.kind if self.id is None else f"{self.kind}:{self.id}"
+
+    @classmethod
+    def parse(cls, text: Optional[str]) -> Optional["ItemRef"]:
+        if not text:
+            return None
+        kind, _, ident = text.partition(":")
+        if not ident:
+            return cls(kind)
+        return cls(kind, int(ident) if ident.isdigit() else ident)
+
+
 @dataclass
 class Notification:
     recipient_id: int
@@ -129,6 +149,7 @@ class Notification:
     read_at: Optional[datetime] = None
     email_status: EmailStatus = EmailStatus.NOT_SENT
     email_resends: int = 0
+    related_item: Optional[ItemRef] = None  # DR-011: the post, connection, conversation or report the event is about
     id: Optional[int] = None
 
     def can_resend(self) -> bool:

@@ -14,10 +14,11 @@ from werkzeug.security import check_password_hash, generate_password_hash
 
 from ..container import get_service, service
 from ..email_gateway import EmailGateway, EmailMessage
-from ..models import Account, AccountStatus, VerificationToken
+from ..models import Account, AccountStatus, ItemRef, VerificationToken
 from ..models.enums import Role, SettingName
 
 EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+PAGE_ROLES = {"moderation": Role.MODERATOR, "admin": Role.ADMINISTRATOR}  # IF-004: the two staff page groups
 
 
 def utc_now() -> datetime:
@@ -56,11 +57,13 @@ class SignInResult:
 
 class AuthService:
     def __init__(self, accounts, tokens, settings, gateway: EmailGateway, base_url: str,
-                 clock: Callable[[], datetime] = utc_now, hash_method: str = "pbkdf2:sha256", audit=None):
+                 clock: Callable[[], datetime] = utc_now, hash_method: str = "pbkdf2:sha256", audit=None,
+                 connections=None, notifications=None, reports=None):
         self.accounts, self.tokens, self.settings = accounts, tokens, settings
         self.gateway, self.base_url, self.clock = gateway, base_url.rstrip("/"), clock
         self.hash_method = hash_method
         self.audit = audit
+        self.connections, self.notifications, self.reports = connections, notifications, reports
 
     # ---- registration (FR-001 to FR-004) ----
     def register(self, email: str, display_name: str, password: str, accepted_notice: bool = False) -> RegistrationResult:
@@ -182,9 +185,35 @@ class AuthService:
     def sign_out(self, session: dict) -> None:
         session.clear()
 
+    # ---- access check (CD-1b mayAccess, NFR-013, IF-004) ----
+    def may_access(self, account: Optional[Account], item: ItemRef) -> bool:
+        """CD-1b AuthService.mayAccess(account, item): may this signed-in account see or change this item?
+
+        Pages: ("page", "moderation") needs the Moderator role, ("page", "admin") the System Administrator role
+        (IF-004). Items: ("conversation", connectionId) and ("notification", notificationId) belong to the two
+        students of the connection and to the recipient respectively (NFR-013); ("report", reportId) to its
+        reporter or a moderator. Anything unknown is refused: the check is on the server, not in a hidden link.
+        """
+        if account is None or account.status != AccountStatus.VERIFIED:
+            return False
+        kind, ref = item.kind, item.id
+        if kind == "page":
+            return PAGE_ROLES.get(ref) == account.role
+        if kind == "conversation" and self.connections is not None:
+            c = self.connections.get(ref)
+            return c is not None and account.id in (c.requester_id, c.receiver_id)
+        if kind == "notification" and self.notifications is not None:
+            n = self.notifications.get(ref)
+            return n is not None and n.recipient_id == account.id
+        if kind == "report" and self.reports is not None:
+            r = self.reports.get(ref)
+            return r is not None and (account.role == Role.MODERATOR or r.reporter_id == account.id)
+        return False
+
 
 @service("auth")
 def build_auth_service(d):
     kwargs = {"clock": d.clock} if d.clock else {}
     return AuthService(d.accounts, d.tokens, d.settings, d.gateway, d.config["BASE_URL"],
-                       hash_method=d.config["PASSWORD_HASH_METHOD"], audit=get_service("audit"), **kwargs)
+                       hash_method=d.config["PASSWORD_HASH_METHOD"], audit=get_service("audit"),
+                       connections=d.connections, notifications=d.notifications, reports=d.reports, **kwargs)

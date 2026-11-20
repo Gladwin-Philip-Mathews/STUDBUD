@@ -20,7 +20,7 @@ import { COHORTS, CourseOption, INTENTS, Profile, ProfilesService } from './prof
           @for (i of intents; track i) { <option [value]="i">{{ i }}</option> }
         </select>
       </label>
-      @if (errors()['intent']) { <p class="error">{{ errors()['intent'] }}</p> }
+      @if (errors()['intent']) { <p class="error" role="alert">{{ errors()['intent'] }}</p> }
 
       <label>Cohort (used only for pilot reports, never shown to other students)
         <select name="cohort" [(ngModel)]="cohort">
@@ -28,12 +28,12 @@ import { COHORTS, CourseOption, INTENTS, Profile, ProfilesService } from './prof
           @for (c of cohorts; track c) { <option [value]="c">{{ c }}</option> }
         </select>
       </label>
-      @if (errors()['cohort']) { <p class="error">{{ errors()['cohort'] }}</p> }
+      @if (errors()['cohort']) { <p class="error" role="alert">{{ errors()['cohort'] }}</p> }
 
       <label>Year of study (optional, private)
         <input type="number" name="year" min="1" max="8" [(ngModel)]="year" />
       </label>
-      @if (errors()['yearOfStudy']) { <p class="error">{{ errors()['yearOfStudy'] }}</p> }
+      @if (errors()['yearOfStudy']) { <p class="error" role="alert">{{ errors()['yearOfStudy'] }}</p> }
 
       <h3>Courses</h3>
       <div class="chips">
@@ -41,11 +41,11 @@ import { COHORTS, CourseOption, INTENTS, Profile, ProfilesService } from './prof
           <span class="chip">{{ c }} <button type="button" (click)="removeCourse(c)" aria-label="Remove {{ c }}">×</button></span>
         } @empty { <em>No courses added.</em> }
       </div>
-      <input name="courseSearch" placeholder="Search the course list" [ngModel]="courseQuery" (ngModelChange)="searchCourses($event)" />
+      <input name="courseSearch" aria-label="Search the course list" placeholder="Search the course list" [ngModel]="courseQuery" (ngModelChange)="searchCourses($event)" />
       @for (o of options(); track o.code) {
         <button type="button" class="option" (click)="addCourse(o)">{{ o.code }} {{ o.name }}</button>
       }
-      @if (errors()['courses']) { <p class="error">{{ errors()['courses'] }}</p> }
+      @if (errors()['courses']) { <p class="error" role="alert">{{ errors()['courses'] }}</p> }
 
       <h3>Interests (up to 20, 30 characters each)</h3>
       <div class="chips">
@@ -53,18 +53,18 @@ import { COHORTS, CourseOption, INTENTS, Profile, ProfilesService } from './prof
           <span class="chip">{{ i }} <button type="button" (click)="removeInterest(i)" aria-label="Remove {{ i }}">×</button></span>
         } @empty { <em>No interests added.</em> }
       </div>
-      <input name="newInterest" maxlength="30" placeholder="Add an interest" [(ngModel)]="newInterest" (keydown.enter)="addInterest($event)" />
+      <input name="newInterest" maxlength="30" aria-label="Add an interest" placeholder="Add an interest" [(ngModel)]="newInterest" (keydown.enter)="addInterest($event)" />
       <button type="button" (click)="addInterest()">Add</button>
-      @if (errors()['interests']) { <p class="error">{{ errors()['interests'] }}</p> }
+      @if (errors()['interests']) { <p class="error" role="alert">{{ errors()['interests'] }}</p> }
 
       <p><button type="submit" class="save">Save profile</button></p>
     </form>
 
     <h3>Delete account</h3>
     <p>This removes your profile, connections, messages and notifications. Your posts stay and show "deleted student".</p>
-    <input type="password" name="deletePassword" placeholder="Enter your password" [(ngModel)]="deletePassword" />
+    <input type="password" name="deletePassword" aria-label="Your password, to confirm deleting the account" placeholder="Enter your password" [(ngModel)]="deletePassword" />
     <button type="button" class="danger" (click)="deleteAccount()">Delete my account</button>
-    @if (deleteMessage()) { <p class="error">{{ deleteMessage() }}</p> }
+    @if (deleteMessage()) { <p class="error" role="alert">{{ deleteMessage() }}</p> }
   `,
   styles: `.chips { display: flex; gap: .4rem; flex-wrap: wrap; margin: .4rem 0; } .chip button { border: 0; background: none; padding: 0 .2rem; } .chip button:hover { background: none; color: var(--danger); } .error { color: #b00020; } .option { display: block; margin: .2rem 0; }`,
 })

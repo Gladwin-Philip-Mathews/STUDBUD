@@ -31,6 +31,10 @@ class ReportRepository(ABC):
     @abstractmethod
     def protected_message_ids(self, recent_since) -> set:
         """Messages attached to an open report or one closed since `recent_since` (OR-001)."""
+    @abstractmethod
+    def purge_closed_before(self, cutoff) -> int:
+        """Delete closed reports decided before `cutoff`, with their outcome and notes (OR-002). Returns how many.
+        Open reports are never deleted. The only caller is the retention clean-up (RetentionService)."""
 
 
 class SqliteReportRepository(ReportRepository):
@@ -93,3 +97,20 @@ class SqliteReportRepository(ReportRepository):
             "SELECT r.item_id FROM safety_reports r LEFT JOIN moderation_outcomes o ON o.report_id = r.id "
             "WHERE r.item_type='message' AND (o.report_id IS NULL OR o.decided_at >= ?)", (_s(recent_since),)).fetchall()
         return {r["item_id"] for r in rows if r["item_id"] is not None}
+
+    def purge_closed_before(self, cutoff):
+        rows = self.conn.execute(
+            "SELECT report_id FROM moderation_outcomes WHERE decided_at < ?", (_s(cutoff),)).fetchall()
+        doomed = [(r["report_id"],) for r in rows]
+        if not doomed:
+            return 0
+        # The append-only triggers (FR-067) stand down only while the unlock row exists, inside this transaction.
+        self.conn.execute("INSERT OR IGNORE INTO retention_unlock(id) VALUES (1)")
+        try:
+            self.conn.executemany("DELETE FROM outcome_notes WHERE report_id=?", doomed)
+            self.conn.executemany("DELETE FROM moderation_outcomes WHERE report_id=?", doomed)
+            self.conn.executemany("DELETE FROM safety_reports WHERE id=?", doomed)
+        finally:
+            self.conn.execute("DELETE FROM retention_unlock")
+        self.conn.commit()
+        return len(doomed)

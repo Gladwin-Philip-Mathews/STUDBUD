@@ -6,7 +6,7 @@ StudBud: a campus platform that helps RIT Dubai students find study partners and
 Advika Pathak, Janani N. Tharkesh, Jason Venkataraghavan, Gladwin Mathews, Ashraf-Ruslan Maktabi
 
 ## Stack
-Angular 20 (frontend), Python 3.11 with Flask (backend JSON API), SQLite, pytest. Node 20.19 or newer is required for Angular. (Confirm at the first team meeting; see M3-Q-01.)
+Angular 20 (frontend), Python 3.11 with Flask (backend JSON API), SQLite, pytest. Node 20.19 or newer is required for Angular.
 
 ## Run it
 Backend (terminal 1):
@@ -19,7 +19,11 @@ copy .env.example .env        # Mac/Linux: cp .env.example .env
 flask --app app run --debug --port 5000
 pytest
 python seed_demo.py           # optional: demo courses, communities, an admin, a moderator and students (password Demo1234)
+flask --app app clean-up      # retention clean-up (OR-001, OR-002); schedule it daily on the pilot server
 ```
+
+Pilot server: set `FORCE_HTTPS=1` and a random `SECRET_KEY` in `.env` (see `.env.example`). Plain HTTP is then
+redirected to HTTPS and the session cookie is sent only over HTTPS (IF-006, NFR-010).
 
 Frontend (terminal 2):
 ```

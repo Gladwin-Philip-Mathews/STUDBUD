@@ -12,26 +12,26 @@ import { PostList } from './post-list';
     <h2>Community</h2>
     <form (ngSubmit)="create()">
       <h3>New post</h3>
-      <select name="newKind" [(ngModel)]="newKind">
+      <select name="newKind" aria-label="Kind of post" [(ngModel)]="newKind">
         <option value="">Kind…</option>
         @for (k of kinds; track k) { <option [value]="k">{{ k }}</option> }
       </select>
-      @if (errors()['kind']) { <p class="error">{{ errors()['kind'] }}</p> }
-      <input name="title" placeholder="Title (5 to 120 characters)" maxlength="120" [(ngModel)]="title" />
-      @if (errors()['title']) { <p class="error">{{ errors()['title'] }}</p> }
-      <textarea name="text" rows="4" placeholder="Text (up to 2000 characters)" maxlength="2000" [(ngModel)]="text"></textarea>
-      @if (errors()['text']) { <p class="error">{{ errors()['text'] }}</p> }
-      @if (errors()['community']) { <p class="error">{{ errors()['community'] }}</p> }
+      @if (errors()['kind']) { <p class="error" role="alert">{{ errors()['kind'] }}</p> }
+      <input name="title" aria-label="Title (5 to 120 characters)" placeholder="Title (5 to 120 characters)" maxlength="120" [(ngModel)]="title" />
+      @if (errors()['title']) { <p class="error" role="alert">{{ errors()['title'] }}</p> }
+      <textarea name="text" rows="4" aria-label="Text (up to 2000 characters)" placeholder="Text (up to 2000 characters)" maxlength="2000" [(ngModel)]="text"></textarea>
+      @if (errors()['text']) { <p class="error" role="alert">{{ errors()['text'] }}</p> }
+      @if (errors()['community']) { <p class="error" role="alert">{{ errors()['community'] }}</p> }
       <button type="submit" class="publish">Post</button>
     </form>
 
     <h3>Posts</h3>
-    <select name="filter" [(ngModel)]="kind" (ngModelChange)="load()">
+    <select name="filter" aria-label="Show posts of one kind" [(ngModel)]="kind" (ngModelChange)="load()">
       <option value="">All kinds</option>
       @for (k of kinds; track k) { <option [value]="k">{{ k }}</option> }
     </select>
     <app-post-list [posts]="posts()" />
-    @if (message()) { <p>{{ message() }}</p> }
+    @if (message()) { <p role="status">{{ message() }}</p> }
     @if (hasMore()) { <button type="button" (click)="more()">Show more</button> }
   `,
   styles: `input, textarea, select { display: block; margin: .4rem 0; max-width: 100%; } .error { color: #b00020; }`,

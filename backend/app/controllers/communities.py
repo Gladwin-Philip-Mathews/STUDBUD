@@ -2,8 +2,7 @@
 from flask import Blueprint, g, jsonify, request
 
 from ..container import get_service
-from ..models.enums import Role
-from ..security import profile_required, role_required
+from ..security import page_required, profile_required
 
 bp = Blueprint("communities", __name__, url_prefix="/api")
 
@@ -65,7 +64,7 @@ def communities():
 
 
 @bp.post("/communities")
-@role_required(Role.ADMINISTRATOR)
+@page_required("admin")  # FR-021: administrators only (an admin page action, IF-004)
 def create_interest():
     result = _svc().create_interest_community((request.get_json(silent=True) or {}).get("name"))
     if not result.ok:
@@ -110,6 +109,8 @@ def create_post(cid):
     result = _svc().create_post(g.account.id, cid, d.get("kind"), d.get("title"), d.get("text"))
     if not result.ok:
         return _errors(result)
+    if result.repeated:  # NFR-008: the same post again returns the stored one instead of a second copy
+        return jsonify({"post": post_json(result.item, g.account.id), "message": "This post was already published."}), 200
     return jsonify({"post": post_json(result.item, g.account.id)}), 201
 
 

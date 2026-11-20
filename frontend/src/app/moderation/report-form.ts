@@ -12,17 +12,17 @@ import { ModerationService, REPORT_REASONS } from './moderation.service';
       <button type="button" class="report" (click)="open.set(true)">Report</button>
     } @else {
       <form class="report-form" (ngSubmit)="submit()">
-        <select name="reason" [(ngModel)]="reason">
+        <select name="reason" aria-label="Reason for the report" [(ngModel)]="reason">
           <option value="">Reason…</option>
           @for (r of reasons; track r) { <option [value]="r">{{ r }}</option> }
         </select>
-        <textarea name="text" rows="2" maxlength="500" placeholder="Details (optional, up to 500 characters)" [(ngModel)]="text"></textarea>
+        <textarea name="text" rows="2" maxlength="500" aria-label="Details (optional, up to 500 characters)" placeholder="Details (optional, up to 500 characters)" [(ngModel)]="text"></textarea>
         <button type="submit" class="send-report">Send report</button>
         <button type="button" (click)="open.set(false)">Cancel</button>
-        @if (error()) { <p class="error">{{ error() }}</p> }
+        @if (error()) { <p class="error" role="alert">{{ error() }}</p> }
       </form>
     }
-    @if (done()) { <p class="notice">{{ done() }}</p> }
+    @if (done()) { <p class="notice" role="status">{{ done() }}</p> }
   `,
   styles: `.report-form { display: grid; gap: .3rem; max-width: 26rem; margin: .4rem 0; } .error { color: #b00020; }`,
 })

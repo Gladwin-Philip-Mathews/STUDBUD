@@ -2,7 +2,8 @@
 from flask import Blueprint, g, jsonify, request
 
 from ..container import get_service
-from ..security import profile_required
+from ..models.entities import ItemRef
+from ..security import may_access, profile_required
 
 bp = Blueprint("messaging", __name__, url_prefix="/api/messages")
 
@@ -35,6 +36,8 @@ def conversations():
 @bp.get("/conversations/<int:connection_id>")
 @profile_required
 def open_conversation(connection_id):
+    if not may_access(ItemRef("conversation", connection_id)):  # NFR-013: only the two students of the connection
+        return jsonify({"message": REFUSED}), 403
     c = get_service("messaging").open(g.account.id, connection_id)
     if c is None:
         return jsonify({"message": REFUSED}), 403
@@ -44,6 +47,8 @@ def open_conversation(connection_id):
 @bp.post("/conversations/<int:connection_id>")
 @profile_required
 def send(connection_id):
+    if not may_access(ItemRef("conversation", connection_id)):
+        return jsonify({"message": REFUSED}), 403
     result = get_service("messaging").send(g.account.id, connection_id, (request.get_json(silent=True) or {}).get("text"))
     if result.error == "not_allowed":
         return jsonify({"message": REFUSED}), 403

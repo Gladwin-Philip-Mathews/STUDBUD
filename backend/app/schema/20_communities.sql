@@ -4,7 +4,8 @@ CREATE TABLE IF NOT EXISTS communities (
   name TEXT NOT NULL UNIQUE COLLATE NOCASE,
   kind TEXT NOT NULL CHECK (kind IN ('course', 'interest')),
   course_code TEXT UNIQUE,
-  status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'archived'))
+  status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'archived')),
+  created_at TEXT
 );
 CREATE TABLE IF NOT EXISTS community_members (
   community_id INTEGER NOT NULL REFERENCES communities(id) ON DELETE CASCADE,

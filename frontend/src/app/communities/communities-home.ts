@@ -12,9 +12,9 @@ import { PostList } from './post-list';
 
     <h3>Your feed</h3>
     <div class="bar">
-      <input name="search" placeholder="Search posts in your communities" [(ngModel)]="query" (keydown.enter)="search()" />
+      <input name="search" aria-label="Search posts in your communities" placeholder="Search posts in your communities" [(ngModel)]="query" (keydown.enter)="search()" />
       <button type="button" (click)="search()">Search</button>
-      <select name="kind" [(ngModel)]="kind" (ngModelChange)="load()">
+      <select name="kind" aria-label="Show posts of one kind" [(ngModel)]="kind" (ngModelChange)="load()">
         <option value="">All kinds</option>
         @for (k of kinds; track k) { <option [value]="k">{{ k }}</option> }
       </select>
@@ -25,7 +25,7 @@ import { PostList } from './post-list';
     @if (hasMore()) { <button type="button" (click)="more()">Show more</button> }
 
     <h3>All communities</h3>
-    <input name="communityQuery" placeholder="Find a community" [(ngModel)]="communityQuery" (ngModelChange)="loadCommunities()" />
+    <input name="communityQuery" aria-label="Find a community" placeholder="Find a community" [(ngModel)]="communityQuery" (ngModelChange)="loadCommunities()" />
     @for (c of communities(); track c.id) {
       <div class="row">
         <span>

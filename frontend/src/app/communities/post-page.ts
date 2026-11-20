@@ -37,11 +37,11 @@ import { CommunitiesService, Post } from './communities.service';
       } @empty { <p>No replies yet.</p> }
 
       <form (ngSubmit)="reply()">
-        <textarea name="reply" rows="3" maxlength="1000" placeholder="Write a reply (up to 1000 characters)" [(ngModel)]="text"></textarea>
-        @if (error()) { <p class="error">{{ error() }}</p> }
+        <textarea name="reply" rows="3" maxlength="1000" aria-label="Write a reply (up to 1000 characters)" placeholder="Write a reply (up to 1000 characters)" [(ngModel)]="text"></textarea>
+        @if (error()) { <p class="error" role="alert">{{ error() }}</p> }
         <button type="submit" class="send-reply">Reply</button>
       </form>
-      @if (info()) { <p class="notice">{{ info() }}</p> }
+      @if (info()) { <p class="notice" role="status">{{ info() }}</p> }
     } @else {
       <p>This post is not available.</p>
     }

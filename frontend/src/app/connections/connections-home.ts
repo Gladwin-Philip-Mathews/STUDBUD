@@ -8,7 +8,7 @@ import { Connected, ConnectionsService, RequestItem, Suggestion } from './connec
   imports: [FormsModule],
   template: `
     <h2>Connections</h2>
-    @if (message()) { <p class="notice" id="conn-message">{{ message() }}</p> }
+    @if (message()) { <p class="notice" id="conn-message" role="status">{{ message() }}</p> }
 
     <h3>Requests for you</h3>
     @for (r of incoming(); track r.id) {
@@ -39,7 +39,7 @@ import { Connected, ConnectionsService, RequestItem, Suggestion } from './connec
     @for (s of suggestions(); track s.accountId) {
       <div class="row suggestion">
         <span><strong>{{ s.displayName }}</strong> ({{ s.intent }}) {{ shared(s) }}</span>
-        <input [(ngModel)]="notes[s.accountId]" maxlength="200" placeholder="Optional note" />
+        <input [(ngModel)]="notes[s.accountId]" [name]="'note' + s.accountId" maxlength="200" aria-label="Optional note to {{ s.displayName }}" placeholder="Optional note" />
         <button type="button" class="send" (click)="send(s)">Send request</button>
         <button type="button" (click)="dismiss(s)">Dismiss</button>
       </div>

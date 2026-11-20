@@ -1,4 +1,5 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
+import { Router } from '@angular/router';
 import { AppNotification, NotificationsService } from './notifications.service';
 
 @Component({
@@ -27,13 +28,23 @@ export class NotificationsPage implements OnInit {
     this.load();
   }
 
+  private readonly router = inject(Router);
+
   load(): void {
-    this.api.list().subscribe((r) => this.items.set(r.notifications));
+    this.api.list().subscribe((r) => {
+      this.items.set(r.notifications);
+      if (typeof r.email === 'boolean') this.emailOn.set(r.email); // FR-082: the stored choice, not a default
+    });
   }
 
+  /** Opening a notification marks it read and goes to the item it is about (DF-27). */
   open(n: AppNotification): void {
+    const link = this.api.linkFor(n);
+    const go = () => { if (link) void this.router.navigate(link); };
     if (!n.read) {
-      this.api.markRead(n.id).subscribe(() => this.load());
+      this.api.markRead(n.id).subscribe(() => { this.load(); go(); });
+    } else {
+      go();
     }
   }
 

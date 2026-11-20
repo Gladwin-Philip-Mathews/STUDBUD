@@ -26,6 +26,15 @@ describe('NotificationsService', () => {
     expect(api.unread()).toBe(0);
   });
 
+  it('links each notification to the item it is about (DR-011, DF-27)', () => {
+    const base = { id: 1, event: 'REPLY_ADDED', body: 'x', createdAt: 't', read: false };
+    expect(api.linkFor({ ...base, item: { type: 'post', id: 12 } })).toEqual(['/communities', 'post', '12']);
+    expect(api.linkFor({ ...base, item: { type: 'connection', id: 5 } })).toEqual(['/connections']);
+    expect(api.linkFor({ ...base, item: { type: 'conversation', id: 5 } })).toEqual(['/messaging']);
+    expect(api.linkFor({ ...base, item: { type: 'report', id: 2 } })).toBeNull(); // a reporter has no report page
+    expect(api.linkFor({ ...base, item: null })).toBeNull();
+  });
+
   it('shows 0 when the backend cannot be reached', () => {
     api.refresh();
     http.expectOne('/api/notifications/unread-count').flush({}, { status: 401, statusText: 'No' });

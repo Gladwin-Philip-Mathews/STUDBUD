@@ -15,7 +15,7 @@ import { AuthService } from './auth.service';
       </label>
       <button type="submit" [disabled]="busy()">Sign in</button>
     </form>
-    @if (error()) { <p class="error" id="sign-in-error">{{ error() }}</p> }
+    @if (error()) { <p class="error" id="sign-in-error" role="alert">{{ error() }}</p> }
     @if (canResend()) {
       <button type="button" id="resend" (click)="resend()">Send a new verification message</button>
     }

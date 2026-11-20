@@ -7,7 +7,7 @@ from datetime import datetime, timezone
 from typing import Callable, Optional
 
 from ..container import service
-from ..models import ConnectionStatus, EventType, Message
+from ..models import ConnectionStatus, EventType, ItemRef, Message
 from ..models.enums import SettingName
 
 MAX_LENGTH = 1000
@@ -56,7 +56,8 @@ class MessagingService:
         m = self.messages.add(Message(connection_id, sender_id, text, sent_at=self.clock()))
         receiver_id = c.receiver_id if c.requester_id == sender_id else c.requester_id
         me = self.accounts.get(sender_id)
-        self.notifications.notify(receiver_id, EventType.MESSAGE_RECEIVED, f"{me.display_name} sent you a message.")
+        self.notifications.notify(receiver_id, EventType.MESSAGE_RECEIVED, f"{me.display_name} sent you a message.",
+                                  ItemRef("conversation", connection_id))  # DF-18
         return SendResult(message=m)
 
     def conversations(self, account_id: int) -> list:

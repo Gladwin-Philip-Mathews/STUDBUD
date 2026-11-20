@@ -14,7 +14,7 @@ import { AuthService } from './auth.service';
       <a routerLink="/sign-in">Continue to sign in</a>
     }
     @if (state() === 'failed') {
-      <p class="error" id="verify-failed">{{ message() }}</p>
+      <p class="error" id="verify-failed" role="alert">{{ message() }}</p>
       <label>Your email <input name="email" type="email" [(ngModel)]="email" /></label>
       <button type="button" id="resend" (click)="resend()">Send a new verification message</button>
       @if (info()) { <p class="notice">{{ info() }}</p> }

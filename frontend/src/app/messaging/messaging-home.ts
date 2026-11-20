@@ -26,8 +26,8 @@ import { ChatMessage, ConversationSummary, MessagingService } from './messaging.
             </p>
           } @empty { <p>No messages yet. Say hello.</p> }
           <form (ngSubmit)="send()">
-            <textarea name="text" rows="2" maxlength="1000" placeholder="Write a message (up to 1000 characters)" [(ngModel)]="text"></textarea>
-            @if (error()) { <p class="error">{{ error() }}</p> }
+            <textarea name="text" rows="2" maxlength="1000" aria-label="Write a message (up to 1000 characters)" placeholder="Write a message (up to 1000 characters)" [(ngModel)]="text"></textarea>
+            @if (error()) { <p class="error" role="alert">{{ error() }}</p> }
             <button type="submit" class="send-message">Send</button>
           </form>
         } @else {
